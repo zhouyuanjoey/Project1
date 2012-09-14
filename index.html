@@ -200,8 +200,10 @@ var step=0.1;
 			    if (-bj.vX*dx-bj.vY*dy<0){
 			    }
 			    else{
-				bj.vX=-bj.vX;
-				bj.vY=-bj.vY;
+				 var jxgive=dx*(bj.vX*dx+bj.vY*dy)/(dx*dx+dy*dy);
+				 var jygive=dy*(bj.vX*dx+bj.vY*dy)/(dx*dx+dy*dy);
+				 bj.vX-=2*jxgive;
+				 bj.vY-=2*jygive;
 			    }
 			    continue;
 			}
@@ -210,8 +212,10 @@ var step=0.1;
 				if (bi.vX*dx+bi.vY*dy<0){
 				}
 				else{
-				    bi.vX=-bi.vX;
-				    bi.vY=-bi.vY;
+				    var ixgive=dx*(bi.vX*dx+bi.vY*dy)/(dx*dx+dy*dy);
+				    var iygive=dy*(bi.vX*dx+bi.vY*dy)/(dx*dx+dy*dy);
+				    bi.vX-=2*ixgive;
+				    bi.vY-=2*iygive;
 				}
 				continue;
 			    }
