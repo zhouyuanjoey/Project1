@@ -13,7 +13,7 @@
     <script>
 	var Dynamic=1;
         var player=-1;
-var step=0.1;
+var step=0.2;
 	window.onload = function() {
         var reqFrame = function(callback){
 	    window.setTimeout(callback,5);
@@ -202,8 +202,9 @@ var step=0.1;
 			    else{
 				 var jxgive=dx*(bj.vX*dx+bj.vY*dy)/(dx*dx+dy*dy);
 				 var jygive=dy*(bj.vX*dx+bj.vY*dy)/(dx*dx+dy*dy);
+				 bj.VerticalEnergy+=(bj.vY-2*jygive)*(bj.vY-2*jygive)-bj.vY*bj.vY;
 				 bj.vX-=2*jxgive;
-				 bj.vY-=2*jygive;
+				 bj.vY-=2*jygive;			
 			    }
 			    continue;
 			}
@@ -214,6 +215,7 @@ var step=0.1;
 				else{
 				    var ixgive=dx*(bi.vX*dx+bi.vY*dy)/(dx*dx+dy*dy);
 				    var iygive=dy*(bi.vX*dx+bi.vY*dy)/(dx*dx+dy*dy);
+				    bi.VerticalEnergy+=(bi.vY-2*iygive)*(bi.vY-2*iygive)-bi.vY*bi.vY;	
 				    bi.vX-=2*ixgive;
 				    bi.vY-=2*iygive;
 				}
