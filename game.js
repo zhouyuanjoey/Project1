@@ -85,28 +85,34 @@ window.onload = function () {
     }
 
     theBoids = [];
+    var markers = new Array();
+    markers.push(theBoids.length);
     for (var i = 0; i < 32; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         theBoids.push(b)
     }
+    markers.push(theBoids.length);
     for (var i = 0; i < 16; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         b.color = 'orange';
         b.radius = 10;
         theBoids.push(b)
     }
+    markers.push(theBoids.length);
     for (var i = 0; i < 8; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         b.color = 'red';
         b.radius = 15;
         theBoids.push(b)
     }
+    markers.push(theBoids.length);
     for (var i = 0; i < 4; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         b.color = 'purple';
         b.radius = 20;
         theBoids.push(b)
     }
+    markers.push(theBoids.length);
 
     function drawBoids() {
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -145,7 +151,7 @@ window.onload = function () {
     // recipricol falloff in weight (allignment parameter + d
     // this assumes the velocities will be renormalized
     function align(boidList) {
-        var ali = .6; // alignment parameter - between 0 and 1
+        var ali = .9; // alignment parameter - between 0 and 1
 
         // make temp arrays to store results
         // this is inefficient, but the goal here is to make it work first
@@ -153,27 +159,30 @@ window.onload = function () {
         var newVY = new Array(boidList.length);
 
         // do the n^2 loop over all pairs, and sum up the contribution of each
-        for (var i = boidList.length - 1; i >= 0; i--) {
-            var bi = boidList[i];
-            var bix = bi.x;
-            var biy = bi.y;
-            newVX[i] = 0;
-            newVY[i] = 0;
+        for (var s = markers.length - 1; s >= 0; s--) {
 
-            for (var j = boidList.length - 1; j >= 0; j--) {
-                var bj = boidList[j];
-                // compute the distance for falloff
-                var dx = bj.x - bix;
-                var dy = bj.y - biy;
-                var d = Math.sqrt(dx * dx + dy * dy);
-                // add to the weighted sum
-                newVX[i] += (bj.vX / (d + ali));
-                newVY[i] += (bj.vY / (d + ali));
+            for (var i = markers[s] - 1; i >= markers[s - 1]; i--) {
+                var bi = boidList[i];
+                var bix = bi.x;
+                var biy = bi.y;
+                newVX[i] = 0;
+                newVY[i] = 0;
+
+                for (var j = markers[s] - 1; j >= markers[s - 1]; j--) {
+                    var bj = boidList[j];
+                    // compute the distance for falloff
+                    var dx = bj.x - bix;
+                    var dy = bj.y - biy;
+                    var d = Math.sqrt(dx * dx + dy * dy);
+                    // add to the weighted sum
+                    newVX[i] += (bj.vX / (d + ali));
+                    newVY[i] += (bj.vY / (d + ali));
+                }
             }
-        }
-        for (var i = boidList.length - 1; i >= 0; i--) {
-            boidList[i].vX = newVX[i];
-            boidList[i].vY = newVY[i];
+            for (var i = markers[s] - 1; i >= markers[s - 1]; i--) {
+                boidList[i].vX = newVX[i];
+                boidList[i].vY = newVY[i];
+            }
         }
     }
 
