@@ -41,22 +41,22 @@ window.onload = function () {
             this.y += this.vY;
             if (this.x > canvas.width) {
                 if (this.vX > 0) {
-                    this.vX = -this.vX;
+                    this.x -= canvas.width;
                 }
             }
             if (this.y > canvas.height) {
                 if (this.vY > 0) {
-                    this.vY = -this.vY;
+                    this.y -= canvas.height;
                 }
             }
             if (this.x < 0) {
                 if (this.vX < 0) {
-                    this.vX = -this.vX;
+                    this.x += canvas.width;
                 }
             }
             if (this.y < 0) {
                 if (this.vY < 0) {
-                    this.vY = -this.vY;
+                    this.y += canvas.height;
                 }
             }
         },
@@ -81,32 +81,34 @@ window.onload = function () {
         boid = new Empty();
         boid.x = x;
         boid.y = y;
+        boid.vX = Math.random();
+        boid.vY = Math.random();
         return boid;
     }
 
     theBoids = [];
     var markers = new Array();
     markers.push(theBoids.length);
-    for (var i = 0; i < 32; i++) {
+    for (var i = 0; i < 8; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         theBoids.push(b)
     }
     markers.push(theBoids.length);
-    for (var i = 0; i < 16; i++) {
+    for (var i = 0; i < 4; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         b.color = 'orange';
         b.radius = 10;
         theBoids.push(b)
     }
     markers.push(theBoids.length);
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < 2; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         b.color = 'red';
         b.radius = 15;
         theBoids.push(b)
     }
     markers.push(theBoids.length);
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < 1; i++) {
         b = makeBoid(50 + Math.random() * 500, 50 + Math.random() * 300);
         b.color = 'purple';
         b.radius = 20;
@@ -153,20 +155,24 @@ window.onload = function () {
     function align(boidList) {
         var ali = .9; // alignment parameter - between 0 and 1
 
+        var attraction = .3;
+
         // make temp arrays to store results
         // this is inefficient, but the goal here is to make it work first
         var newVX = new Array(boidList.length);
         var newVY = new Array(boidList.length);
 
+
         // do the n^2 loop over all pairs, and sum up the contribution of each
         for (var s = markers.length - 1; s >= 0; s--) {
-
             for (var i = markers[s] - 1; i >= markers[s - 1]; i--) {
                 var bi = boidList[i];
                 var bix = bi.x;
                 var biy = bi.y;
                 newVX[i] = 0;
                 newVY[i] = 0;
+                var attrVX = 0;
+                var attrVY = 0;
 
                 for (var j = markers[s] - 1; j >= markers[s - 1]; j--) {
                     var bj = boidList[j];
@@ -178,12 +184,47 @@ window.onload = function () {
                     newVX[i] += (bj.vX / (d + ali));
                     newVY[i] += (bj.vY / (d + ali));
                 }
-            }
-            for (var i = markers[s] - 1; i >= markers[s - 1]; i--) {
-                boidList[i].vX = newVX[i];
-                boidList[i].vY = newVY[i];
+
+                for (var j = theBoids.length - 1; j > markers[s]; j--) {
+                    var bj = boidList[j];
+                    // compute the distance for falloff
+                    var dx = bj.x - bix;
+                    var dy = bj.y - biy;
+                    var d = Math.sqrt(dx * dx + dy * dy);
+                    // add to the weighted sum
+                    //if (d < 30) {
+                    attrVX -= (dx) / (d * d);
+                    attrVY -= (dy) / (d * d);
+                    //}
+                }
+
+                for (var j = markers[s - 1] - 1; j >= 0; j--) {
+                    var bj = boidList[j];
+                    // compute the distance for falloff
+                    var dx = bj.x - bix;
+                    var dy = bj.y - biy;
+                    var d = Math.sqrt(dx * dx + dy * dy);
+                    // add to the weighted sum
+                    attrVX += (dx) / (d * d);
+                    attrVY += (dy) / (d * d);
+                }
+
+                var z = Math.sqrt(newVX[i] * newVX[i] + newVY[i] * newVY[i]);
+                z = 1 - attraction / z;
+                newVX[i] *= z;
+                newVY[i] *= z;
+                var q = Math.sqrt(attrVX * attrVX + attrVY * attrVY);
+                q = attraction / q;
+                newVX[i] = newVX[i] + (attrVX * q);
+                newVY[i] = newVY[i] + (attrVY * q);
+
             }
         }
+        for (var i = theBoids.length - 1; i >= 0; i--) {
+            boidList[i].vX = newVX[i];
+            boidList[i].vY = newVY[i];
+        }
+
     }
 
     function moveBoids() {
