@@ -3,47 +3,200 @@
   <head>
     <style>
       body {
-        margin: 50px;
-        padding: 0px;
+      margin: 50px;
+      padding: 0px;
       }
       #myCanvas {
-        border: 5px solid #000000;
+      border: 5px solid #000000;
       }
     </style>
     <script>
+      	
       window.onload = function() {
-        var canvas = document.getElementById('myCanvas');
-        var context = canvas.getContext('2d');
-        var map = new Image();
-        var plane = new Image();
+	  var reqFrame =window.requestAnimationFrame ||
+	          window.webkitRequestAnimationFrame ||
+	          window.mozRequestAnimationFrame ||
+	          window.oRequestAnimationFrame ||
+	          window.msRequestAnimationFrame ||
+	          function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element){
+	      window.setTimeout(callback, 1000 / 60);
+	  };
 
-        map.onload = function() {
-            plane.onload = function() {
-          var destWidth = 50;
-          var destHeight = 100;
-          var destX = 70;
-          var destY = canvas.height/2-destHeight/2;          
-          context.drawImage(plane, destX, destY, destWidth, destHeight);	
-        };
-        plane.src = 'plane.jpg';
+	  var canvas = document.getElementById('myCanvas');
+	  var context = canvas.getContext('2d');
+	  var sight=200;
 
-          // draw cropped image
-          var sourceX = 0;
-          var sourceY = 0;
-          var sourceWidth = canvas.width;
-          var sourceHeight = canvas.height;
-          var destWidth = sourceWidth;
-          var destHeight = sourceHeight;
-          var destX = 0;
-          var destY = 0;
+	  var object = {
+	      "img" : null,
+	      "rot" : 0,
+	      "x" : 0,
+	      "y" : 0,
+	      "width" : 0,
+	      "height" : 0,
+	      "targetx": 0,
+	      "targety": 0,
+	      "speed": 0,
+	      draw : function() {
+		   simrotateImage(this.rot, this.img, this.x, this.y, this.width, this.height);
+	      }		  
+	  };
 
-          context.drawImage(map, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-        };
-        map.src = 'world-map.png';
-      
-     }
+	  function comrotateImage(rot, img, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight) {//drawing a rotated image on the canvas, complicated version
+	      context.translate(destX,destY);
+	      context.rotate(-rot);
+	      context.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, -destWidth/2, -destHeight/2, destWidth, destHeight);
+	      context.rotate(rot);
+	      context.translate(-destX,-destY);
+	  }
+	  
+	  function simrotateImage(rot, img, destX, destY, destWidth, destHeight) {//drawing a rototed image on the canvas, simple version
+	      context.translate(destX,destY);
+	      context.rotate(-rot);
+	      context.drawImage(img, -destWidth/2, -destHeight/2, destWidth, destHeight);
+	      context.rotate(rot);
+	      context.translate(-destX,-destY);
+	  }
 
-    </script>
+
+
+
+	  function makeObject(img,rot,x,y,width,height,targetx,targety,speed) {
+	      Empty = function () {};
+	      Empty.prototype = object;	// don't ask why not ball.prototype=aBall;
+	      obj = new Empty();
+	      obj.img = img;
+	      obj.x = x;
+	      obj.y = y;
+	      obj.width = width;
+	      obj.height = height;
+	      obj.targetx = targetx;
+	      obj.targety = targety;
+	      obj.speed = speed;
+	      return obj;
+	  }
+	  
+	  var objectSet=[];
+	  var moveSet=[];
+
+	  var map = new Image();
+	  map.src = 'map.png';
+	  var UpperLeftX=0;
+	  var UpperLeftY=map.height/4;
+	  var sourceWidth=map.width/2;
+	  var sourceHeight=map.height/2;
+	  
+	  var plane = new Image();	
+	  var destWidth = 102;
+	  var destHeight = 76;
+	  var destX = 50;
+	  var destY = canvas.height/2;
+	  objectSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,4));
+	  moveSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,4));	  
+	  plane.src = 'plane.png';
+
+	  function doClick(evt){
+	      for (var i=0;i<moveSet.length;i++){
+		  moveSet[i].targetx = evt.pageX - canvas.offsetLeft;
+		  moveSet[i].targety = evt.pageY - canvas.offsetTop;
+	      }
+	  }
+
+	  function draws() {	      
+	      for (var i=0;i<moveSet.length;i++){
+	       	  objectSet[i].draw();
+	      }
+	  }
+
+	  function moves() {
+	      for (var i=0;i<moveSet.length;i++){
+		  var dx=moveSet[i].targetx-moveSet[i].x;
+		  var dy=moveSet[i].targety-moveSet[i].y;
+		  if (dy==0 && dx==0){
+		  }
+		  else{
+		      moveSet[i].rot=-Math.atan2(dy,dx);
+		  }
+		  if (dx*dx+dy*dy>moveSet[i].speed*moveSet[i].speed){
+		      moveSet[i].x+=moveSet[i].speed*dx/Math.sqrt(dx*dx+dy*dy);
+		      moveSet[i].y+=moveSet[i].speed*dy/Math.sqrt(dx*dx+dy*dy);
+		  }
+		  else{
+		      moveSet[i].x=moveSet[i].targetx;
+		      moveSet[i].y=moveSet[i].targety;
+		  }
+		  if (moveSet[i].x<sight){
+		      UpperLeftX-=(sight-moveSet[i].x)/canvas.width*map.width/2;
+		      moveSet[i].targetx+=sight-moveSet[i].x;
+		      moveSet[i].x=sight;
+		  }
+		  if (UpperLeftX<0){
+		      moveSet[i].x+=UpperLeftX/(map.width/2)*canvas.width;
+		      moveSet[i].targetx+=UpperLeftX/(map.width/2)*canvas.width;
+		      UpperLeftX=0;
+		  }
+		  if (moveSet[i].x>canvas.width-sight){
+		      UpperLeftX+=(moveSet[i].x-(canvas.width-sight))/canvas.width*map.width/2;
+		      moveSet[i].targetx-=moveSet[i].x-(canvas.width-sight);
+		      moveSet[i].x=canvas.width-sight;
+		  }
+		  if (UpperLeftX+sourceWidth>=map.width){
+		      moveSet[i].x+=(UpperLeftX-(map.width-1-sourceWidth))/(map.width/2)*canvas.width;
+		      moveSet[i].targetx+=(UpperLeftX-(map.width-1-sourceWidth))/(map.width/2)*canvas.width;
+		      UpperLeftX=map.width-1-sourceWidth;
+		  }
+
+		   if (moveSet[i].y<sight){
+		      UpperLeftY-=(sight-moveSet[i].y)/canvas.height*map.height/2;
+		      moveSet[i].targety+=sight-moveSet[i].y;
+		      moveSet[i].y=sight;
+		  }
+		  if (UpperLeftY<0){
+		      moveSet[i].y+=UpperLeftY/(map.height/2)*canvas.height;
+		      moveSet[i].targety+=UpperLeftY/(map.height/2)*canvas.height;
+		      UpperLeftY=0;
+		  }
+		  if (moveSet[i].y>canvas.height-sight){
+		      UpperLeftY+=(moveSet[i].y-(canvas.height-sight))/canvas.height*map.height/2;
+		      moveSet[i].targety-=moveSet[i].y-(canvas.height-sight);
+		      moveSet[i].y=canvas.height-sight;
+		  }
+		  if (UpperLeftY+sourceHeight>=map.height){
+		      moveSet[i].y+=(UpperLeftY-(map.height-1-sourceHeight))/(map.height/2)*canvas.height;
+		      moveSet[i].targety+=(UpperLeftY-(map.height-1-sourceHeight))/(map.height/2)*canvas.height;
+		      UpperLeftY=map.height-1-sourceHeight;
+		  }
+		  objectSet[i]=moveSet[i];
+	      }
+	  }
+	      
+
+	  function drawBackGround() {
+	      var destWidth = canvas.width;
+	      var destHeight = canvas.height;
+	      var destX = canvas.width/2;
+	      var destY = canvas.height/2;
+	      comrotateImage(0, map, UpperLeftX, UpperLeftY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+	     
+	  }
+		  
+		  
+	      
+	      
+
+	  function drawLoop() {
+	      drawBackGround();
+	      moves();
+	      draws();
+	      reqFrame(drawLoop);	
+	  }
+
+	  canvas.addEventListener("click",doClick,false);
+	  drawBackGround();
+	  drawLoop();
+
+      }
+
+</script>
   </head>
   <body>
     <canvas id="myCanvas" width="1250" height="550"></canvas>
