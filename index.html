@@ -65,6 +65,7 @@
 	      Empty.prototype = object;	// don't ask why not ball.prototype=aBall;
 	      obj = new Empty();
 	      obj.img = img;
+	      obj.rot = rot;
 	      obj.x = x;
 	      obj.y = y;
 	      obj.width = width;
@@ -77,6 +78,7 @@
 	  
 	  var objectSet=[];
 	  var moveSet=[];
+	  var bulletSet=[];
 
 	  var map = new Image();
 	  map.src = 'map.png';
@@ -84,90 +86,127 @@
 	  var UpperLeftY=map.height/4;
 	  var sourceWidth=map.width/2;
 	  var sourceHeight=map.height/2;
+
+	  var castle = new Image();
+	  var destWidth = 100;
+	  var destHeight = 100;
+	  var destX = (900-UpperLeftX)/sourceWidth*canvas.width;
+	  var destY = (452-UpperLeftY)/sourceHeight*canvas.height;
+	  objectSet.push(makeObject(castle,0,destX,destY,destWidth,destHeight,destX,destY,0));
+	  castle.src = 'castle.png';
+
 	  
 	  var plane = new Image();	
-	  var destWidth = 102;
-	  var destHeight = 76;
-	  var destX = 50;
-	  var destY = canvas.height/2;
-	  objectSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,4));
-	  moveSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,4));	  
+	  destWidth = 111;
+	  destHeight = 70;
+	  destX = 50;
+	  destY = canvas.height/2;
+	  objectSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,10));
+	  moveSet.push(1);	  
 	  plane.src = 'plane.png';
+
+	  var bullet = new Image();
+	  bullet.src = 'bullet.png';
 
 	  function doClick(evt){
 	      for (var i=0;i<moveSet.length;i++){
-		  moveSet[i].targetx = evt.pageX - canvas.offsetLeft;
-		  moveSet[i].targety = evt.pageY - canvas.offsetTop;
+		  objectSet[moveSet[i]].targetx = evt.pageX - canvas.offsetLeft;
+		  objectSet[moveSet[i]].targety = evt.pageY - canvas.offsetTop;
 	      }
 	  }
 
-	  function draws() {	      
-	      for (var i=0;i<moveSet.length;i++){
+	  function draws() {
+	      for (var i=0;i<objectSet.length;i++){
 	       	  objectSet[i].draw();
 	      }
 	  }
 
 	  function moves() {
+	      var preX=UpperLeftX;
+	      var preY=UpperLeftY;
 	      for (var i=0;i<moveSet.length;i++){
-		  var dx=moveSet[i].targetx-moveSet[i].x;
-		  var dy=moveSet[i].targety-moveSet[i].y;
+		  var dx=objectSet[moveSet[i]].targetx-objectSet[moveSet[i]].x;
+		  var dy=objectSet[moveSet[i]].targety-objectSet[moveSet[i]].y;
 		  if (dy==0 && dx==0){
 		  }
 		  else{
-		      moveSet[i].rot=-Math.atan2(dy,dx);
+		      objectSet[moveSet[i]].rot=-Math.atan2(dy,dx);
 		  }
-		  if (dx*dx+dy*dy>moveSet[i].speed*moveSet[i].speed){
-		      moveSet[i].x+=moveSet[i].speed*dx/Math.sqrt(dx*dx+dy*dy);
-		      moveSet[i].y+=moveSet[i].speed*dy/Math.sqrt(dx*dx+dy*dy);
+		  if (dx*dx+dy*dy>objectSet[moveSet[i]].speed*objectSet[moveSet[i]].speed){
+		      objectSet[moveSet[i]].x+=objectSet[moveSet[i]].speed*dx/Math.sqrt(dx*dx+dy*dy);
+		      objectSet[moveSet[i]].y+=objectSet[moveSet[i]].speed*dy/Math.sqrt(dx*dx+dy*dy);
 		  }
 		  else{
-		      moveSet[i].x=moveSet[i].targetx;
-		      moveSet[i].y=moveSet[i].targety;
+		      objectSet[moveSet[i]].x=objectSet[moveSet[i]].targetx;
+		      objectSet[moveSet[i]].y=objectSet[moveSet[i]].targety;
 		  }
-		  if (moveSet[i].x<sight){
-		      UpperLeftX-=(sight-moveSet[i].x)/canvas.width*map.width/2;
-		      moveSet[i].targetx+=sight-moveSet[i].x;
-		      moveSet[i].x=sight;
+		  if (objectSet[moveSet[i]].x<sight){
+		      UpperLeftX-=(sight-objectSet[moveSet[i]].x)/canvas.width*sourceWidth;
 		  }
+   
 		  if (UpperLeftX<0){
-		      moveSet[i].x+=UpperLeftX/(map.width/2)*canvas.width;
-		      moveSet[i].targetx+=UpperLeftX/(map.width/2)*canvas.width;
 		      UpperLeftX=0;
 		  }
-		  if (moveSet[i].x>canvas.width-sight){
-		      UpperLeftX+=(moveSet[i].x-(canvas.width-sight))/canvas.width*map.width/2;
-		      moveSet[i].targetx-=moveSet[i].x-(canvas.width-sight);
-		      moveSet[i].x=canvas.width-sight;
+		  if (objectSet[moveSet[i]].x>canvas.width-1-sight){
+		      UpperLeftX+=(objectSet[moveSet[i]].x-(canvas.width-1-sight))/canvas.width*sourceWidth;
 		  }
-		  if (UpperLeftX+sourceWidth>=map.width){
-		      moveSet[i].x+=(UpperLeftX-(map.width-1-sourceWidth))/(map.width/2)*canvas.width;
-		      moveSet[i].targetx+=(UpperLeftX-(map.width-1-sourceWidth))/(map.width/2)*canvas.width;
+		  if (UpperLeftX+sourceWidth>map.width-1){
 		      UpperLeftX=map.width-1-sourceWidth;
 		  }
 
-		   if (moveSet[i].y<sight){
-		      UpperLeftY-=(sight-moveSet[i].y)/canvas.height*map.height/2;
-		      moveSet[i].targety+=sight-moveSet[i].y;
-		      moveSet[i].y=sight;
+		   if (objectSet[moveSet[i]].y<sight){
+		      UpperLeftY-=(sight-objectSet[moveSet[i]].y)/canvas.height*sourceHeight;
 		  }
+		  
 		  if (UpperLeftY<0){
-		      moveSet[i].y+=UpperLeftY/(map.height/2)*canvas.height;
-		      moveSet[i].targety+=UpperLeftY/(map.height/2)*canvas.height;
 		      UpperLeftY=0;
 		  }
-		  if (moveSet[i].y>canvas.height-sight){
-		      UpperLeftY+=(moveSet[i].y-(canvas.height-sight))/canvas.height*map.height/2;
-		      moveSet[i].targety-=moveSet[i].y-(canvas.height-sight);
-		      moveSet[i].y=canvas.height-sight;
-		  }
-		  if (UpperLeftY+sourceHeight>=map.height){
-		      moveSet[i].y+=(UpperLeftY-(map.height-1-sourceHeight))/(map.height/2)*canvas.height;
-		      moveSet[i].targety+=(UpperLeftY-(map.height-1-sourceHeight))/(map.height/2)*canvas.height;
+
+		  if (objectSet[moveSet[i]].y>canvas.height-1-sight){
+		      UpperLeftY+=(objectSet[moveSet[i]].y-(canvas.height-1-sight))/canvas.height*sourceHeight;
+		  } 
+
+
+		  if (UpperLeftY+sourceHeight>map.height-1){
 		      UpperLeftY=map.height-1-sourceHeight;
+		  }		    
+	      }
+
+	      for (var i=0;i<bulletSet.length;i++){
+		  objectSet[bulletSet[i]].x+=objectSet[bulletSet[i]].speed*Math.cos(objectSet[bulletSet[i]].rot);
+		  objectSet[bulletSet[i]].y-=objectSet[bulletSet[i]].speed*Math.sin(objectSet[bulletSet[i]].rot);
+	      }		  
+	      
+	      for (var i=0;i<objectSet.length;i++){
+		  objectSet[i].x-=(UpperLeftX-preX)/sourceWidth*canvas.width;
+		  objectSet[i].y-=(UpperLeftY-preY)/sourceHeight*canvas.height;
+	      }
+	      for (var i=0;i<moveSet.length;i++){
+		  objectSet[moveSet[i]].targetx-=(UpperLeftX-preX)/sourceWidth*canvas.width;
+		  objectSet[moveSet[i]].targety-=(UpperLeftY-preY)/sourceHeight*canvas.height;
+	      }	      
+	  }
+
+	  function destroy(){
+	      var i=0;
+	      while(i<bulletSet.length){
+		  if (objectSet[bulletSet[i]].x>(map.width-1-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].x<(0-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].y>(map.height-1-UpperLeftY)/sourceHeight*canvas.height || objectSet[bulletSet[i]].y<(0-UpperLeftY)/sourceHeight*canvas.height){
+		      objectSet.splice(bulletSet[i],1);
+		      for (var j=0;j<bulletSet.length;j++){
+		  	  if (bulletSet[j]>bulletSet[i]){
+		  	      bulletSet[j]--;
+		  	  }
+		      }
+		      bulletSet.splice(i,1);
 		  }
-		  objectSet[i]=moveSet[i];
+		  else{
+		      i++;
+		  }	
+		  i++;
 	      }
 	  }
+
+
 	      
 
 	  function drawBackGround() {
@@ -177,20 +216,27 @@
 	      var destY = canvas.height/2;
 	      comrotateImage(0, map, UpperLeftX, UpperLeftY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 	     
-	  }
-		  
-		  
-	      
-	      
+	  }	      
 
 	  function drawLoop() {
 	      drawBackGround();
 	      moves();
+	      destroy();
 	      draws();
 	      reqFrame(drawLoop);	
 	  }
 
+	  function doShoot(evt) {
+	      if (evt.keyCode==49){
+		  for (var i=0;i<moveSet.length;i++){
+		      bulletSet.push(objectSet.length);
+		      objectSet.push(makeObject(bullet,objectSet[moveSet[i]].rot,objectSet[moveSet[i]].x,objectSet[moveSet[i]].y,15,5,0,0,20));
+		  }
+	      }
+	  }
+
 	  canvas.addEventListener("click",doClick,false);
+	  window.addEventListener("keydown",doShoot,false);
 	  drawBackGround();
 	  drawLoop();
 
