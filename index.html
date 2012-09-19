@@ -36,8 +36,27 @@
 	      "targetx": 0,
 	      "targety": 0,
 	      "speed": 0,
+	      "maxlife": 0,
+	      "life": 0,
+	      "destroy" : 0,
+	      "belong" : 0,
 	      draw : function() {
 		   simrotateImage(this.rot, this.img, this.x, this.y, this.width, this.height);
+		   if (this.maxlife!=0){
+		       context.fillStyle='red';
+		       context.beginPath();
+		       context.rect(this.x-0.3*this.width,this.y-0.7*this.height,0.6*this.life/this.maxlife*this.width,0.1*this.height);
+		       context.fill();
+		       context.fillStyle='black';
+		       context.beginPath();
+		       context.rect(this.x-0.3*this.width+0.6*this.life/this.maxlife*this.width,this.y-0.7*this.height,0.6*(1-this.life/this.maxlife)*this.width,0.1*this.height);
+		       context.fill();		       
+		       context.lineWidth=2;
+		       context.strokeStyle='white';
+		       context.beginPath();
+		       context.rect(this.x-0.3*this.width,this.y-0.7*this.height,0.6*this.width,0.1*this.height);
+		       context.stroke();
+		   }
 	      }		  
 	  };
 
@@ -60,7 +79,7 @@
 
 
 
-	  function makeObject(img,rot,x,y,width,height,targetx,targety,speed) {
+	  function makeObject(img,rot,x,y,width,height,targetx,targety,speed,maxlife,life,destroy,belong) {
 	      Empty = function () {};
 	      Empty.prototype = object;	// don't ask why not ball.prototype=aBall;
 	      obj = new Empty();
@@ -73,12 +92,17 @@
 	      obj.targetx = targetx;
 	      obj.targety = targety;
 	      obj.speed = speed;
+	      obj.maxlife = maxlife;
+	      obj.life = life;
+	      obj.destroy = destroy;
+	      obj.belong = belong;
 	      return obj;
 	  }
 	  
 	  var objectSet=[];
 	  var moveSet=[];
 	  var bulletSet=[];
+	  var otherSet=[];
 
 	  var map = new Image();
 	  map.src = 'map.png';
@@ -92,7 +116,8 @@
 	  var destHeight = 100;
 	  var destX = (900-UpperLeftX)/sourceWidth*canvas.width;
 	  var destY = (452-UpperLeftY)/sourceHeight*canvas.height;
-	  objectSet.push(makeObject(castle,0,destX,destY,destWidth,destHeight,destX,destY,0));
+	  objectSet.push(makeObject(castle,0,destX,destY,destWidth,destHeight,destX,destY,0,2000,2000,0,0));
+	  otherSet.push(0);
 	  castle.src = 'castle.png';
 
 	  
@@ -101,7 +126,7 @@
 	  destHeight = 70;
 	  destX = 50;
 	  destY = canvas.height/2;
-	  objectSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,10));
+	  objectSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,10,100,100,0,1));
 	  moveSet.push(1);	  
 	  plane.src = 'plane.png';
 
@@ -187,10 +212,45 @@
 	      }	      
 	  }
 
-	  function destroy(){
+	  function hitTest(){
+	      for (var i=0;i<bulletSet.length;i++){
+		  if (objectSet[bulletSet[i]].x>(map.width-1-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].x<(0-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].y>(map.height-1-UpperLeftY)/sourceHeight*canvas.height || objectSet[bulletSet[i]].y<(0-UpperLeftY)/sourceHeight*canvas.height){
+		      objectSet[bulletSet[i]].destroy=1;
+		  }
+		  else{
+		      var collide=0;
+		      for (var j=0;j<moveSet.length;j++){
+		       	  if (objectSet[bulletSet[i]].belong==moveSet[j]){
+		       	      continue;
+		       	  }
+		      	  if (objectSet[bulletSet[i]].x>=objectSet[moveSet[j]].x-objectSet[moveSet[j]].width/2 && objectSet[bulletSet[i]].x<=objectSet[moveSet[j]].x+objectSet[moveSet[j]].width/2 && objectSet[bulletSet[i]].y>=objectSet[moveSet[j]].y-objectSet[moveSet[j]].height/2 && objectSet[bulletSet[i]].y<=objectSet[moveSet[j]].y+objectSet[moveSet[j]].height/2){
+		      	      objectSet[bulletSet[i]].destroy=1;
+		      	      collide=1;
+		      	      break;
+		      	  }
+		      }
+		      if (collide==1){
+		      	  continue;
+		      }
+		      for (var j=0;j<otherSet.length;j++){
+		      	  if (objectSet[bulletSet[i]].belong==otherSet[j]){
+		      	      continue;
+		      	  }
+		      	  if (objectSet[bulletSet[i]].x>=objectSet[otherSet[j]].x-objectSet[otherSet[j]].width/2 && objectSet[bulletSet[i]].x<=objectSet[otherSet[j]].x+objectSet[otherSet[j]].width/2 && objectSet[bulletSet[i]].y>=objectSet[otherSet[j]].y-objectSet[otherSet[j]].height/2 && objectSet[bulletSet[i]].y<=objectSet[otherSet[j]].y+objectSet[otherSet[j]].height/2){
+		      	      objectSet[bulletSet[i]].destroy=1;
+		      	      collide=1;
+		      	      break;
+		      	  }
+		      }
+		  }	      
+	      }
+	  }   
+	      
+
+	  function destroy(){		  
 	      var i=0;
 	      while(i<bulletSet.length){
-		  if (objectSet[bulletSet[i]].x>(map.width-1-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].x<(0-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].y>(map.height-1-UpperLeftY)/sourceHeight*canvas.height || objectSet[bulletSet[i]].y<(0-UpperLeftY)/sourceHeight*canvas.height){
+		  if (objectSet[bulletSet[i]].destroy==1){
 		      objectSet.splice(bulletSet[i],1);
 		      for (var j=0;j<bulletSet.length;j++){
 		  	  if (bulletSet[j]>bulletSet[i]){
@@ -221,6 +281,7 @@
 	  function drawLoop() {
 	      drawBackGround();
 	      moves();
+	      hitTest();
 	      destroy();
 	      draws();
 	      reqFrame(drawLoop);	
@@ -230,7 +291,7 @@
 	      if (evt.keyCode==49){
 		  for (var i=0;i<moveSet.length;i++){
 		      bulletSet.push(objectSet.length);
-		      objectSet.push(makeObject(bullet,objectSet[moveSet[i]].rot,objectSet[moveSet[i]].x,objectSet[moveSet[i]].y,15,5,0,0,20));
+		      objectSet.push(makeObject(bullet,objectSet[moveSet[i]].rot,objectSet[moveSet[i]].x,objectSet[moveSet[i]].y,15,5,0,0,20,0,0,0,1));
 		  }
 	      }
 	  }
