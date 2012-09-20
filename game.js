@@ -19,7 +19,9 @@ window.onload = function () {
     var context = canvas.getContext('2d');
     var sightx = 600;
     var sighty = 200;
-    var speedLimit=6;
+    var speedLimit = 10;
+    var acceleration = .1;
+    var rotationSpeed = .1;
 
     var object = {
         "img": null,
@@ -31,82 +33,83 @@ window.onload = function () {
         "dx": 0,
         "dy": 0,
         "speed": 0,
-	"maxlife": 0,
-	"life": 0,
-	"destroy" : 0,
-	"belong" : 0,
-	draw : function() {
-	    simrotateImage(this.rot, this.img, this.x, this.y, this.width, this.height);
-	    if (this.maxlife!=0){
-		context.fillStyle='red';
-		context.beginPath();
-		context.rect(this.x-0.3*this.width,this.y-0.7*this.height,0.6*this.life/this.maxlife*this.width,0.1*this.height);
-		context.fill();
-		context.fillStyle='black';
-		context.beginPath();
-		context.rect(this.x-0.3*this.width+0.6*this.life/this.maxlife*this.width,this.y-0.7*this.height,0.6*(1-this.life/this.maxlife)*this.width,0.1*this.height);
-		context.fill();		       
-		context.lineWidth=2;
-		context.strokeStyle='white';
-		context.beginPath();
-		context.rect(this.x-0.3*this.width,this.y-0.7*this.height,0.6*this.width,0.1*this.height);
-		context.stroke();
-	    }
-	},
+        "maxlife": 0,
+        "life": 0,
+        "destroy": 0,
+        "belong": 0,
+	"lastshoot" : 0, 
+        draw: function () {
+            simrotateImage(this.rot, this.img, this.x, this.y, this.width, this.height);
+            if (this.maxlife != 0) {
+                context.fillStyle = 'red';
+                context.beginPath();
+                context.rect(this.x - 0.3 * this.width, this.y - 0.7 * this.height, 0.6 * this.life / this.maxlife * this.width, 0.1 * this.height);
+                context.fill();
+                context.fillStyle = 'black';
+                context.beginPath();
+                context.rect(this.x - 0.3 * this.width + 0.6 * this.life / this.maxlife * this.width, this.y - 0.7 * this.height, 0.6 * (1 - this.life / this.maxlife) * this.width, 0.1 * this.height);
+                context.fill();
+                context.lineWidth = 2;
+                context.strokeStyle = 'white';
+                context.beginPath();
+                context.rect(this.x - 0.3 * this.width, this.y - 0.7 * this.height, 0.6 * this.width, 0.1 * this.height);
+                context.stroke();
+            }
+        },
 
-	//------------------------------------------------------------------------------------------
-	// This is how I would like to implement movement, because it will work better for the boids
-	//------------------------------------------------------------------------------------------
-	//move with edge bounce (not working correctly yet, currently not in use)
-	moveB: function () {
-	    this.x += this.dx;
-	    this.y += this.dy;
-	    if (this.x > canvas.width) {
-		if (this.dx > 0) {
-		    this.dx = -this.dx;
-		}
-	    }
+        //------------------------------------------------------------------------------------------
+        // This is how I would like to implement movement, because it will work better for the boids
+        //------------------------------------------------------------------------------------------
+        //move with edge bounce (not working correctly yet, currently not in use)
+        moveB: function () {
+            this.x += this.dx;
+            this.y += this.dy;
+            if (this.x > canvas.width) {
+                if (this.dx > 0) {
+                    this.dx = -this.dx;
+                }
+            }
 
-	    if (this.y > canvas.height) {
-		if (this.dy > 0) {
-		    this.dy = -this.dy;
-		}
-	    }
-	    if (this.x < 0) {
-		if (this.dx < 0) {
-		    this.dx = -this.dx;
-		}
-	    }
-	    if (this.y < 0) {
-		if (this.dy < 0) {
-		    this.dy = -this.dy;
-		}
-	    }
-	},
-	//move with no edge bounce (currenttly in use by the bullets)
-	moveNB: function () {
-	    this.x += this.dx;
-	    this.y += this.dy;
-	},
-	// compute the discrete component vectors from the speed and rotation
-	rotToDxDy: function () {
-	    this.dx = this.speed * Math.cos(this.rot);
-	    this.dy = this.speed * -Math.sin(this.rot);
-	},
+            if (this.y > canvas.height) {
+                if (this.dy > 0) {
+                    this.dy = -this.dy;
+                }
+            }
+            if (this.x < 0) {
+                if (this.dx < 0) {
+                    this.dx = -this.dx;
+                }
+            }
+            if (this.y < 0) {
+                if (this.dy < 0) {
+                    this.dy = -this.dy;
+                }
+            }
+        },
+        //move with no edge bounce (currenttly in use by the bullets)
+        moveNB: function () {
+            this.x += this.dx;
+            this.y += this.dy;
+        },
+        // compute the discrete component vectors from the speed and rotation
+        rotToDxDy: function () {
+            this.dx = this.speed * Math.cos(this.rot);
+            this.dy = this.speed * -Math.sin(this.rot);
+        },
 
-	normalize: function () {
-	    var z = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-	    if (z < .001) {
-		this.dx = (Math.random() - .5) * this.speed;
-		this.dy = (Math.random() - .5) * this.speed;
-		this.norm();
-	    } else {
-		z = this.speed / z;
-		this.dx *= z;
-		this.dy *= z;
-	    }
-	}
-	//--------------------------------------------------------------------------------------------
+        normalize: function () {
+            var z = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+            if (z < .001) {
+                this.dx = (Math.random() - .5) * this.speed;
+                this.dy = (Math.random() - .5) * this.speed;
+                this.norm();
+            } else {
+                z = this.speed / z;
+                this.dx *= z;
+                this.dy *= z;
+            }
+        }
+        //--------------------------------------------------------------------------------------------
     };
 
     function comrotateImage(rot, img, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight) {//drawing a rotated image on the canvas, complicated version
@@ -125,24 +128,25 @@ window.onload = function () {
         context.translate(-destX, -destY);
     }
 
-    function makeObject(img,rot,x,y,width,height,speed,maxlife,belong) {
-	Empty = function () {};
-	Empty.prototype = object;	// don't ask why not ball.prototype=aBall;
-	obj = new Empty();
-	obj.img = img;
-	obj.rot = rot;
-	obj.x = x;
-	obj.y = y;
-	obj.width = width;
-	obj.height = height;
-	obj.speed = speed;
-	obj.rotToDxDy();
-	obj.maxlife = maxlife;
-	obj.life = maxlife;
-	obj.destroy = 0;
-	obj.belong = belong;
-	return obj;
-    }  
+    function makeObject(img, rot, x, y, width, height, speed, maxlife, belong) {
+        Empty = function () { };
+        Empty.prototype = object; // don't ask why not ball.prototype=aBall;
+        obj = new Empty();
+        obj.img = img;
+        obj.rot = rot;
+        obj.x = x;
+        obj.y = y;
+        obj.width = width;
+        obj.height = height;
+        obj.speed = speed;
+        obj.rotToDxDy();
+        obj.maxlife = maxlife;
+        obj.life = maxlife;
+        obj.destroy = 0;
+        obj.belong = belong;
+	obj.lastshoot = -1;
+        return obj;
+    }
 
 
     //------------------------------------------------------------------------------------------------------------
@@ -162,8 +166,8 @@ window.onload = function () {
         obj.height = 5;
         obj.speed = shooter.speed + 15;
         obj.rotToDxDy();
-	obj.destroy = 0;
-	obj.belong = shooter.belong;
+        obj.destroy = 0;
+        obj.belong = shooter.belong;
         return obj;
     }
 
@@ -179,8 +183,8 @@ window.onload = function () {
         obj.height = 10;
         obj.speed = 5;
         obj.rotToDxDy();
-	obj.destroy = 0;
-	obj.belong = launcher.belong;
+        obj.destroy = 0;
+        obj.belong = launcher.belong;
         return obj;
     }
 
@@ -193,6 +197,12 @@ window.onload = function () {
     var castleload = 0;
     var planeload = 0;
     var bulletload = 0;
+    var shootBullet = 0;
+    var shootDrone = 0;
+    var Wdown = 0;
+    var Sdown = 0;
+    var Adown = 0;
+    var Ddown = 0;
 
 
     var map = new Image();
@@ -210,7 +220,7 @@ window.onload = function () {
     var destHeight = 100;
     var destX = (900 - UpperLeftX) / sourceWidth * canvas.width;
     var destY = (452 - UpperLeftY) / sourceHeight * canvas.height;
-    objectSet.push(makeObject(castle,0,destX,destY,destWidth,destHeight,0,2000,0));
+    objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, 0, 2000, 0));
     otherSet.push(0);
     castle.src = 'castle.png';
     castle.onload = function () {
@@ -222,7 +232,7 @@ window.onload = function () {
     destHeight = 70;
     destX = 50;
     destY = canvas.height / 2;
-    objectSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,0,100,1));
+    objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, 0, 100, 1));
     moveSet.push(1);
     plane.src = 'plane.png';
     plane.onload = function () {
@@ -258,8 +268,8 @@ window.onload = function () {
         //if we could do this for all non-stationary bojects that would be nice
         //---------------------------------------------------------------------------------------------------------------
         for (var i = 0; i < moveSet.length; i++) {
-	    objectSet[moveSet[i]].x+=objectSet[moveSet[i]].dx;
-	    objectSet[moveSet[i]].y+=objectSet[moveSet[i]].dy;
+            objectSet[moveSet[i]].x += objectSet[moveSet[i]].dx;
+            objectSet[moveSet[i]].y += objectSet[moveSet[i]].dy;
             if (objectSet[moveSet[i]].x < sightx) {
                 UpperLeftX -= (sightx - objectSet[moveSet[i]].x) / canvas.width * sourceWidth;
             }
@@ -296,7 +306,7 @@ window.onload = function () {
             //--------------------------------------------------------------------------------------------------
             //changed bullets to the stored dx and dy movement
             //---------------------------------------------------------------------------------------------------
-	    objectSet[bulletSet[i]].moveNB();
+            objectSet[bulletSet[i]].moveNB();
         }
 
         for (var i = 0; i < droneSet.length; i++) {
@@ -307,35 +317,47 @@ window.onload = function () {
             objectSet[i].x -= (UpperLeftX - preX) / sourceWidth * canvas.width;
             objectSet[i].y -= (UpperLeftY - preY) / sourceHeight * canvas.height;
         }
-	
-	for (var i=0; i< moveSet.length; i++) {
-	    if (objectSet[moveSet[i]].x<0){
-		objectSet[moveSet[i]].x=0;
-	    }
-	    if (objectSet[moveSet[i]].x>=canvas.width){
-		objectSet[moveSet[i]].x=canvas.width-1;
-	    }
-	    if (objectSet[moveSet[i]].y<0){
-		objectSet[moveSet[i]].y=0;
-	    }
-	    if (objectSet[moveSet[i]].y>=canvas.height){
-		objectSet[moveSet[i]].y=canvas.height-1;
-	    }
-	}
+
+        for (var i = 0; i < moveSet.length; i++) {
+            if (objectSet[moveSet[i]].x < 0) {
+                objectSet[moveSet[i]].x = 0;
+            }
+            if (objectSet[moveSet[i]].x >= canvas.width) {
+                objectSet[moveSet[i]].x = canvas.width - 1;
+            }
+            if (objectSet[moveSet[i]].y < 0) {
+                objectSet[moveSet[i]].y = 0;
+            }
+            if (objectSet[moveSet[i]].y >= canvas.height) {
+                objectSet[moveSet[i]].y = canvas.height - 1;
+            }
+        }
     }
 
     function launchDrone() {
-	for (var i = 0; i < moveSet.length; i++) {
-	    droneSet.push(objectSet.length);
-	    objectSet.push(makeDrone(objectSet[otherSet[i]], 1));
-	}
+        for (var i = 0; i < otherSet.length; i++) {
+	    var time=(new Date()).getSeconds();
+	    if (time==objectSet[otherSet[i]].lastshoot){
+	    	continue;
+	    }
+	    objectSet[otherSet[i]].lastshoot=time;
+
+            droneSet.push(objectSet.length);
+            objectSet.push(makeDrone(objectSet[otherSet[i]], 1));
+        }
     }
 
     function launchBullet() {
-	for (var i = 0; i < moveSet.length; i++) {
-	    bulletSet.push(objectSet.length);
-	    objectSet.push(makeBullet(objectSet[moveSet[i]]));
-	}
+        for (var i = 0; i < moveSet.length; i++) {
+	    var time=(new Date()).getSeconds();
+	    if (time==objectSet[moveSet[i]].lastshoot){
+	    	continue;
+	    }
+	    objectSet[moveSet[i]].lastshoot=time;
+	    
+            bulletSet.push(objectSet.length);
+            objectSet.push(makeBullet(objectSet[moveSet[i]]));
+        }
     }
 
     var ali = .9;
@@ -393,146 +415,146 @@ window.onload = function () {
         }
     }
 
-    function hitTest(){
-    	for (var i=0;i<bulletSet.length;i++){
-    	    if (objectSet[bulletSet[i]].x>(map.width-1-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].x<(0-UpperLeftX)/sourceWidth*canvas.width || objectSet[bulletSet[i]].y>(map.height-1-UpperLeftY)/sourceHeight*canvas.height || objectSet[bulletSet[i]].y<(0-UpperLeftY)/sourceHeight*canvas.height){
-    		objectSet[bulletSet[i]].destroy=1;
-    	    }
-    	    else{
-    		var collide=0;
-    		for (var j=0;j<moveSet.length;j++){
-    		    if (objectSet[bulletSet[i]].belong==moveSet[j]){
-    			continue;
-    		    }
-    		    if (objectSet[bulletSet[i]].x>=objectSet[moveSet[j]].x-objectSet[moveSet[j]].width/2 && objectSet[bulletSet[i]].x<=objectSet[moveSet[j]].x+objectSet[moveSet[j]].width/2 && objectSet[bulletSet[i]].y>=objectSet[moveSet[j]].y-objectSet[moveSet[j]].height/2 && objectSet[bulletSet[i]].y<=objectSet[moveSet[j]].y+objectSet[moveSet[j]].height/2){
-    			objectSet[bulletSet[i]].destroy=1;
-    			objectSet[moveSet[j]].life-=100;
-    			if (objectSet[moveSet[j]].life<=0){
-    			    objectSet[moveSet[j]].destroy=1;
-    			}
-    			collide=1;
-    			break;
-    		    }
-    		}
-    		if (collide==1){
-    		    continue;
-    		}
-    		for (var j=0;j<otherSet.length;j++){
-    		    if (objectSet[bulletSet[i]].belong==otherSet[j]){
-    			continue;
-    		    }
-    		    if (objectSet[bulletSet[i]].x>=objectSet[otherSet[j]].x-objectSet[otherSet[j]].width/2 && objectSet[bulletSet[i]].x<=objectSet[otherSet[j]].x+objectSet[otherSet[j]].width/2 && objectSet[bulletSet[i]].y>=objectSet[otherSet[j]].y-objectSet[otherSet[j]].height/2 && objectSet[bulletSet[i]].y<=objectSet[otherSet[j]].y+objectSet[otherSet[j]].height/2){
-    			objectSet[bulletSet[i]].destroy=1;
-    			objectSet[otherSet[j]].life-=100;
-    			if (objectSet[otherSet[j]].life<=0){
-    			    objectSet[otherSet[j]].destroy=1;
-    			}
-    			collide=1;
-    			break;
-    		    }
-    		}
-    	    }	      
-    	}
-    }   
-	      
+    function hitTest() {
+        for (var i = 0; i < bulletSet.length; i++) {
+            if (objectSet[bulletSet[i]].x > (map.width - 1 - UpperLeftX) / sourceWidth * canvas.width || objectSet[bulletSet[i]].x < (0 - UpperLeftX) / sourceWidth * canvas.width || objectSet[bulletSet[i]].y > (map.height - 1 - UpperLeftY) / sourceHeight * canvas.height || objectSet[bulletSet[i]].y < (0 - UpperLeftY) / sourceHeight * canvas.height) {
+                objectSet[bulletSet[i]].destroy = 1;
+            }
+            else {
+                var collide = 0;
+                for (var j = 0; j < moveSet.length; j++) {
+                    if (objectSet[bulletSet[i]].belong == moveSet[j]) {
+                        continue;
+                    }
+                    if (objectSet[bulletSet[i]].x >= objectSet[moveSet[j]].x - objectSet[moveSet[j]].width / 2 && objectSet[bulletSet[i]].x <= objectSet[moveSet[j]].x + objectSet[moveSet[j]].width / 2 && objectSet[bulletSet[i]].y >= objectSet[moveSet[j]].y - objectSet[moveSet[j]].height / 2 && objectSet[bulletSet[i]].y <= objectSet[moveSet[j]].y + objectSet[moveSet[j]].height / 2) {
+                        objectSet[bulletSet[i]].destroy = 1;
+                        objectSet[moveSet[j]].life -= 100;
+                        if (objectSet[moveSet[j]].life <= 0) {
+                            objectSet[moveSet[j]].destroy = 1;
+                        }
+                        collide = 1;
+                        break;
+                    }
+                }
+                if (collide == 1) {
+                    continue;
+                }
+                for (var j = 0; j < otherSet.length; j++) {
+                    if (objectSet[bulletSet[i]].belong == otherSet[j]) {
+                        continue;
+                    }
+                    if (objectSet[bulletSet[i]].x >= objectSet[otherSet[j]].x - objectSet[otherSet[j]].width / 2 && objectSet[bulletSet[i]].x <= objectSet[otherSet[j]].x + objectSet[otherSet[j]].width / 2 && objectSet[bulletSet[i]].y >= objectSet[otherSet[j]].y - objectSet[otherSet[j]].height / 2 && objectSet[bulletSet[i]].y <= objectSet[otherSet[j]].y + objectSet[otherSet[j]].height / 2) {
+                        objectSet[bulletSet[i]].destroy = 1;
+                        objectSet[otherSet[j]].life -= 100;
+                        if (objectSet[otherSet[j]].life <= 0) {
+                            objectSet[otherSet[j]].destroy = 1;
+                        }
+                        collide = 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
-    function destroy(){		  
-    	var i=0;
-    	while(i<bulletSet.length){
-    	    if (objectSet[bulletSet[i]].destroy==1){
-    		objectSet.splice(bulletSet[i],1);
-    		for (var j=0;j<bulletSet.length;j++){
-    		    if (bulletSet[j]>bulletSet[i]){
-    			bulletSet[j]--;
-    		    }
-    		}
-    		for (var j=0;j<moveSet.length;j++){
-    		    if (moveSet[j]>bulletSet[i]){
-    			moveSet[j]--;
-    		    }
-    		}
-    		for (var j=0;j<otherSet.length;j++){
-    		    if (otherSet[j]>bulletSet[i]){
-    			otherSet[j]--;
-    		    }
-    		}
-		for (var j=0;j<droneSet.length;j++){
-    		    if (droneSet[j]>bulletSet[i]){
-    			droneSet[j]--;
-    		    }
-    		}
-    		bulletSet.splice(i,1);
-    	    }
-    	    else{
-    		i++;
-    	    }	
-    	    i++;
-    	}
-    	i=0;
-    	while(i<moveSet.length){
-    	    if (objectSet[moveSet[i]].destroy==1){
-    		objectSet.splice(moveSet[i],1);
-    		for (var j=0;j<bulletSet.length;j++){
-    		    if (bulletSet[j]>moveSet[i]){
-    			bulletSet[j]--;
-    		    }
-    		}
-    		for (var j=0;j<moveSet.length;j++){
-    		    if (moveSet[j]>moveSet[i]){
-    			moveSet[j]--;
-    		    }
-    		}
-    		for (var j=0;j<otherSet.length;j++){
-    		    if (otherSet[j]>moveSet[i]){
-    			otherSet[j]--;
-    		    }
-    		}
-		for (var j=0;j<droneSet.length;j++){
-    		    if (droneSet[j]>moveSet[i]){
-    			droneSet[j]--;
-    		    }
-    		}
-		    
-    		moveSet.splice(i,1);
-    	    }
-    	    else{
-    		i++;
-    	    }	
-    	    i++;
-    	}
-    	i=0;
-    	while(i<otherSet.length){
-    	    if (objectSet[otherSet[i]].destroy==1){
-    		objectSet.splice(otherSet[i],1);
-    		for (var j=0;j<bulletSet.length;j++){
-    		    if (bulletSet[j]>otherSet[i]){
-    			bulletSet[j]--;
-    		    }
-    		}
-    		for (var j=0;j<moveSet.length;j++){
-    		    if (moveSet[j]>otherSet[i]){
-    			moveSet[j]--;
-    		    }
-    		}
-    		for (var j=0;j<otherSet.length;j++){
-    		    if (otherSet[j]>otherSet[i]){
-    			otherSet[j]--;
-    		    }
-    		}
-		for (var j=0;j<droneSet.length;j++){
-    		    if (droneSet[j]>otherSet[i]){
-    			droneSet[j]--;
-    		    }
-    		}
-		
-		     
-    		otherSet.splice(i,1);
-    	    }
-    	    else{
-    		i++;
-    	    }	
-    	    i++;
-    	}	      
+
+    function destroy() {
+        var i = 0;
+        while (i < bulletSet.length) {
+            if (objectSet[bulletSet[i]].destroy == 1) {
+                objectSet.splice(bulletSet[i], 1);
+                for (var j = 0; j < bulletSet.length; j++) {
+                    if (bulletSet[j] > bulletSet[i]) {
+                        bulletSet[j]--;
+                    }
+                }
+                for (var j = 0; j < moveSet.length; j++) {
+                    if (moveSet[j] > bulletSet[i]) {
+                        moveSet[j]--;
+                    }
+                }
+                for (var j = 0; j < otherSet.length; j++) {
+                    if (otherSet[j] > bulletSet[i]) {
+                        otherSet[j]--;
+                    }
+                }
+                for (var j = 0; j < droneSet.length; j++) {
+                    if (droneSet[j] > bulletSet[i]) {
+                        droneSet[j]--;
+                    }
+                }
+                bulletSet.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+            i++;
+        }
+        i = 0;
+        while (i < moveSet.length) {
+            if (objectSet[moveSet[i]].destroy == 1) {
+                objectSet.splice(moveSet[i], 1);
+                for (var j = 0; j < bulletSet.length; j++) {
+                    if (bulletSet[j] > moveSet[i]) {
+                        bulletSet[j]--;
+                    }
+                }
+                for (var j = 0; j < moveSet.length; j++) {
+                    if (moveSet[j] > moveSet[i]) {
+                        moveSet[j]--;
+                    }
+                }
+                for (var j = 0; j < otherSet.length; j++) {
+                    if (otherSet[j] > moveSet[i]) {
+                        otherSet[j]--;
+                    }
+                }
+                for (var j = 0; j < droneSet.length; j++) {
+                    if (droneSet[j] > moveSet[i]) {
+                        droneSet[j]--;
+                    }
+                }
+
+                moveSet.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+            i++;
+        }
+        i = 0;
+        while (i < otherSet.length) {
+            if (objectSet[otherSet[i]].destroy == 1) {
+                objectSet.splice(otherSet[i], 1);
+                for (var j = 0; j < bulletSet.length; j++) {
+                    if (bulletSet[j] > otherSet[i]) {
+                        bulletSet[j]--;
+                    }
+                }
+                for (var j = 0; j < moveSet.length; j++) {
+                    if (moveSet[j] > otherSet[i]) {
+                        moveSet[j]--;
+                    }
+                }
+                for (var j = 0; j < otherSet.length; j++) {
+                    if (otherSet[j] > otherSet[i]) {
+                        otherSet[j]--;
+                    }
+                }
+                for (var j = 0; j < droneSet.length; j++) {
+                    if (droneSet[j] > otherSet[i]) {
+                        droneSet[j]--;
+                    }
+                }
+
+
+                otherSet.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+            i++;
+        }
     }
 
     function drawBackGround() {
@@ -544,114 +566,117 @@ window.onload = function () {
 
     }
 
+    function react() {
+	if (shootBullet==1){
+	    launchBullet();
+	}
+	if (shootDrone==1){
+	    launchDrone();
+	}
+	if (Wdown){
+	    for (var i = 0; i < moveSet.length; i++) {
+		for (var i = 0; i < moveSet.length; i++) {
+		    objectSet[moveSet[i]].speed += acceleration;
+		    if (objectSet[moveSet[i]].speed > speedLimit) {
+			objectSet[moveSet[i]].speed = speedLimit;
+		    }
+		    objectSet[moveSet[i]].rotToDxDy();
+		}
+	    }
+	}
+	if (Sdown){
+	    for (var i = 0; i < moveSet.length; i++) {
+		objectSet[moveSet[i]].speed -= acceleration;
+		if (objectSet[moveSet[i]].speed < -speedLimit) {
+		    objectSet[moveSet[i]].speed = -speedLimit;
+                    }
+		objectSet[moveSet[i]].rotToDxDy();
+	    }
+	}
+	if (Adown){
+	    for (var i = 0; i < moveSet.length; i++) {
+		objectSet[moveSet[i]].rot += rotationSpeed;
+		objectSet[moveSet[i]].rotToDxDy();
+	    }
+	}
+	if (Ddown){
+	    for (var i = 0; i < moveSet.length; i++) {
+		objectSet[moveSet[i]].rot -= rotationSpeed;
+		objectSet[moveSet[i]].rotToDxDy();
+	    }
+	}
+    }
+
+
+
     function drawLoop() {
-	if (mapload==1 && planeload==1 && castleload==1 && bulletload==1){
-	    drawBackGround();
-	    adjustDrones();
-	    moves();
-	    hitTest();
-	    destroy();
-	    draws();
-	    if (otherSet.length==0){
-		context.font = '60pt Calibri';
-		context.textAlign= 'center';
-		context.textBasline= 'middle';
-		context.fillStyle = 'red';
-		context.fillText('You Win!', canvas.width/2, canvas.height/2);		  
-		return;
-	    }
-	}
-	reqFrame(drawLoop);	
+        if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1) {
+            drawBackGround();
+            adjustDrones();
+	    react();
+            moves();
+            hitTest();
+            destroy();
+            draws();
+            if (otherSet.length == 0) {
+                context.font = '60pt Calibri';
+                context.textAlign = 'center';
+                context.textBasline = 'middle';
+                context.fillStyle = 'red';
+                context.fillText('You Win!', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+        }
+        reqFrame(drawLoop);
     }
 
-    function doKey(evt) {
-	switch (evt.charCode){
-	case 44:
-	launchBullet();
+    function KeyDown(evt){
+	switch (evt.keyCode) {
+	case 188:
+	shootBullet=1;
 	break;
-	case 46:
-	launchDrone();
+	case 190:
+	shootDrone=1;
 	break;
-	case 119:
-	for (var i = 0; i < moveSet.length; i++) {
-	    var vx = objectSet[moveSet[i]].speed * Math.cos(objectSet[moveSet[i]].rot);
-	    var vy = -objectSet[moveSet[i]].speed * Math.sin(objectSet[moveSet[i]].rot);
-	    if (vy>1){
-		vy=vy*0.02;
-	    }
-	    else{
-		vy-=0.5;
-	    }
-	    if (vx*vx+vy*vy>speedLimit*speedLimit){
-		vx*=speedLimit/Math.sqrt(vx*vx+vy*vy);
-		vy*=speedLimit/Math.sqrt(vx*vx+vy*vy);		
-	    }
-	    objectSet[moveSet[i]].speed=Math.sqrt(vx*vx+vy*vy);
-	    objectSet[moveSet[i]].rot=-Math.atan2(vy,vx);
-	    objectSet[moveSet[i]].rotToDxDy();
-	}
+	case 87:
+	Wdown=1;
 	break;
-	case 115:
-	for (var i = 0; i < moveSet.length; i++) {
-	    var vx = objectSet[moveSet[i]].speed * Math.cos(objectSet[moveSet[i]].rot);
-	    var vy = -objectSet[moveSet[i]].speed * Math.sin(objectSet[moveSet[i]].rot);
-	    if (vy<-1){
-		vy=vy*0.02;
-	    }
-	    else{
-		vy+=0.5;
-	    }
-	    if (vx*vx+vy*vy>speedLimit*speedLimit){
-		vx*=speedLimit/Math.sqrt(vx*vx+vy*vy);
-		vy*=speedLimit/Math.sqrt(vx*vx+vy*vy);	
-	    }
-	    objectSet[moveSet[i]].speed=Math.sqrt(vx*vx+vy*vy);
-	    objectSet[moveSet[i]].rot=-Math.atan2(vy,vx);
-	    objectSet[moveSet[i]].rotToDxDy();
-	}
-	
+	case 83:
+	Sdown=1;
 	break;
-	case 97:
-	for (var i = 0; i < moveSet.length; i++) {
-	    var vx = objectSet[moveSet[i]].speed * Math.cos(objectSet[moveSet[i]].rot);
-	    var vy = -objectSet[moveSet[i]].speed * Math.sin(objectSet[moveSet[i]].rot);
-	    if (vx>1){
-		vx=vx*0.02;
-	    }
-	    else{
-		vx-=0.5;
-	    }
-	    if (vx*vx+vy*vy>speedLimit*speedLimit){
-		vx*=speedLimit/Math.sqrt(vx*vx+vy*vy);
-		vy*=speedLimit/Math.sqrt(vx*vx+vy*vy);		
-	    }
-	    objectSet[moveSet[i]].speed=Math.sqrt(vx*vx+vy*vy);
-	    objectSet[moveSet[i]].rot=-Math.atan2(vy,vx);
-	    objectSet[moveSet[i]].rotToDxDy();
-	}
+	case 65:
+	Adown=1;
 	break;
-	case 100:
-	for (var i = 0; i < moveSet.length; i++) {
-	    var vx = objectSet[moveSet[i]].speed * Math.cos(objectSet[moveSet[i]].rot);
-	    var vy = -objectSet[moveSet[i]].speed * Math.sin(objectSet[moveSet[i]].rot);
-	    if (vx<-1){
-		vx=vx*0.02;
-	    }
-	    else{
-		vx+=0.5;
-	    }
-	    if (vx*vx+vy*vy>speedLimit*speedLimit){
-		vx*=speedLimit/Math.sqrt(vx*vx+vy*vy);
-		vy*=speedLimit/Math.sqrt(vx*vx+vy*vy);		
-	    }
-	    objectSet[moveSet[i]].speed=Math.sqrt(vx*vx+vy*vy);
-	    objectSet[moveSet[i]].rot=-Math.atan2(vy,vx);
-	    objectSet[moveSet[i]].rotToDxDy();
-	}
-	break;
+	case 68:
+	Ddown=1;
+	break;	
 	}
     }
 
-    window.addEventListener("keypress", doKey, false);
+    function KeyUp(evt){
+	switch (evt.keyCode) {
+	case 188:
+	shootBullet=0;
+	break;
+	case 190:
+	shootDrone=0;
+	break;
+	case 87:
+	Wdown=0;
+	break;
+	case 83:
+	Sdown=0;
+	break;
+	case 65:
+	Adown=0;
+	break;
+	case 68:
+	Ddown=0;
+	break;	
+	}
+    }    
+
+    window.addEventListener("keyup", KeyUp, false);
+    window.addEventListener("keydown", KeyDown, false);    
     drawLoop();
 }
