@@ -12,7 +12,7 @@ window.onload = function () {
 	          window.oRequestAnimationFrame ||
 	          window.msRequestAnimationFrame ||
 	  function (/* function FrameRequestCallback */callback, /* DOMElement Element */element) {
-	      window.setTimeout(callback, 1000 / 60);
+	      window.setTimeout(callback, 20);
 	  };
 
     var canvas = document.getElementById('myCanvas');
@@ -163,9 +163,17 @@ window.onload = function () {
     var objectSet = [];
     var moveSet = [];
     var bulletSet = [];
+    var mapload = 0;
+    var castleload = 0;
+    var planeload = 0;
+    var bulletload = 0;
+
 
     var map = new Image();
     map.src = 'map.png';
+    map.onload = function () {
+        mapload = 1;
+    }
     var UpperLeftX = 0;
     var UpperLeftY = map.height / 4;
     var sourceWidth = map.width / 2;
@@ -178,7 +186,9 @@ window.onload = function () {
     var destY = (452 - UpperLeftY) / sourceHeight * canvas.height;
     objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, destX, destY, 0));
     castle.src = 'castle.png';
-
+    castle.onload = function () {
+        castleload = 1;
+    }
 
     var plane = new Image();
     destWidth = 111;
@@ -188,9 +198,17 @@ window.onload = function () {
     objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, destX, destY, 10));
     moveSet.push(1);
     plane.src = 'plane.png';
+    plane.onload = function () {
+        planeload = 1;
+    }
+
 
     var bullet = new Image();
     bullet.src = 'bullet.png';
+    bullet.onload = function () {
+        bulletload = 1;
+    }
+
 
     function doClick(evt) {
         for (var i = 0; i < moveSet.length; i++) {
@@ -380,11 +398,13 @@ window.onload = function () {
     }
 
     function drawLoop() {
-        drawBackGround();
-        adjustDrones();
-        moves();
-        destroy();
-        draws();
+        if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1) {
+            drawBackGround();
+            adjustDrones();
+            moves();
+            destroy();
+            draws();
+        }
         reqFrame(drawLoop);
     }
 
@@ -402,7 +422,5 @@ window.onload = function () {
 
     canvas.addEventListener("click", doClick, false);
     window.addEventListener("keydown", doShoot, false);
-    drawBackGround();
     drawLoop();
-
 }
