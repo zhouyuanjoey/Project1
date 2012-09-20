@@ -26,8 +26,8 @@ window.onload = function () {
         "y": 0,
         "width": 0,
         "height": 0,
-        "targetx": 0,
-        "targety": 0,
+        "targetx": 0, //when the player can move with arrow keys
+        "targety": 0, //these should no longer be needed
         "dx": 0,
         "dy": 0,
         "speed": 0,
@@ -42,13 +42,13 @@ window.onload = function () {
         moveB: function () {
             this.x += this.dx;
             this.y += this.dy;
-            if (this.x > map.width) {
+            if (this.x > canvas.width) {
                 if (this.dx > 0) {
                     this.dx = -this.dx;
                 }
             }
 
-            if (this.y > map.height) {
+            if (this.y > canvas.height) {
                 if (this.dy > 0) {
                     this.dy = -this.dy;
                 }
@@ -73,6 +73,19 @@ window.onload = function () {
         rotToDxDy: function () {
             this.dx = this.speed * Math.cos(obj.rot);
             this.dy = this.speed * -Math.sin(obj.rot);
+        },
+
+        normalize: function () {
+            var z = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+            if (z < .001) {
+                this.dx = (Math.random() - .5) * this.speed;
+                this.dy = (Math.random() - .5) * this.speed;
+                this.norm();
+            } else {
+                z = this.speed / z;
+                this.dx *= z;
+                this.dy *= z;
+            }
         }
         //--------------------------------------------------------------------------------------------
     };
@@ -126,14 +139,27 @@ window.onload = function () {
         obj.y = shooter.y;
         obj.width = 15;
         obj.height = 5;
-        obj.targetx = 0;
-        obj.targety = 0;
         obj.speed = shooter.speed + 15;
-        obj.dx = obj.speed * Math.cos(obj.rot);
-        obj.dy = obj.speed * -Math.sin(obj.rot);
+        obj.rotToDxDy();
         return obj;
     }
 
+    function makeDrone(launcher, rot) {
+        Empty = function () { };
+        Empty.prototype = object; // don't ask why not ball.prototype=aBall;
+        obj = new Empty();
+        obj.img = plane;
+        obj.rot = rot;
+        obj.x = launcher.x;
+        obj.y = launcher.y;
+        obj.width = 30;
+        obj.height = 10;
+        obj.speed = 5;
+        obj.rotToDxDy();
+        return obj;
+    }
+
+    var droneSet = [];
     var objectSet = [];
     var moveSet = [];
     var bulletSet = [];
@@ -179,6 +205,9 @@ window.onload = function () {
             //TO DO: add check for if object is visible (dont draw it if you cannot see it)
             //----------------------------------------------------------------------------------------------------
             objectSet[i].draw();
+        }
+        for (var i = 0; i < droneSet.length; i++) {
+            droneSet[i].draw();
         }
     }
 
@@ -249,6 +278,10 @@ window.onload = function () {
             objectSet[bulletSet[i]].moveNB();
         }
 
+        for (var i = 0; i < droneSet.length; i++) {
+            droneSet[i].moveB();
+        }
+
         for (var i = 0; i < objectSet.length; i++) {
             objectSet[i].x -= (UpperLeftX - preX) / sourceWidth * canvas.width;
             objectSet[i].y -= (UpperLeftY - preY) / sourceHeight * canvas.height;
@@ -256,6 +289,65 @@ window.onload = function () {
         for (var i = 0; i < moveSet.length; i++) {
             objectSet[moveSet[i]].targetx -= (UpperLeftX - preX) / sourceWidth * canvas.width;
             objectSet[moveSet[i]].targety -= (UpperLeftY - preY) / sourceHeight * canvas.height;
+        }
+    }
+
+    function launchDrone() {
+        droneSet.push(makeDrone(objectSet[0], 1));
+    }
+
+    var ali = .9;
+    function adjustDrones() {
+        var newDX = new Array(droneSet.length);
+        var newDY = new Array(droneSet.length);
+        for (var i = droneSet.length - 1; i >= 0; i--) {
+            var bi = droneSet[i];
+            var bix = bi.x;
+            var biy = bi.y;
+            newDX[i] = 0;
+            newDY[i] = 0;
+            for (var j = droneSet.length - 1; j >= 0; j--) {
+                var bj = droneSet[j];
+                var dx = bj.x - bix;
+                var dy = bj.y - biy;
+                var d = Math.sqrt(dx * dx + dy * dy);
+                newDX[i] += (bj.dx / (d + ali));
+                newDY[i] += (bj.dy / (d + ali));
+            }
+        }
+        for (var i = droneSet.length - 1; i >= 0; i--) {
+            droneSet[i].dx = newDX[i];
+            droneSet[i].dy = newDY[i];
+        }
+        bounce();
+        for (var i = droneSet.length - 1; i >= 0; i--) {
+            droneSet[i].normalize();
+        }
+
+    }
+
+    function bounce() {
+
+        for (var i = droneSet.length - 1; i >= 0; i--) {
+            var bi = droneSet[i];
+            var bix = bi.x;
+            var biy = bi.y;
+            for (var j = i - 1; j >= 0; j--) {
+                var bj = droneSet[j];
+                var bjx = bj.x;
+                var bjy = bj.y;
+                var dx = bjx - bix;
+                var dy = bjy - biy;
+                var d = dx * dx + dy * dy;
+                var impactDistance = (30)
+                impactDistance *= impactDistance;
+                if (d < impactDistance) {
+                    bj.dx = dy;
+                    bj.dy = dx;
+                    bi.dx = -dx;
+                    bi.dy = -dy;
+                }
+            }
         }
     }
 
@@ -289,6 +381,7 @@ window.onload = function () {
 
     function drawLoop() {
         drawBackGround();
+        adjustDrones();
         moves();
         destroy();
         draws();
@@ -301,6 +394,9 @@ window.onload = function () {
                 bulletSet.push(objectSet.length);
                 objectSet.push(makeObject(bullet, objectSet[moveSet[i]].rot, objectSet[moveSet[i]].x, objectSet[moveSet[i]].y, 15, 5, 0, 0, 20));
             }
+        }
+        if (evt.keyCode == 32) {
+            launchDrone();
         }
     }
 
