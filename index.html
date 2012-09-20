@@ -19,7 +19,7 @@
 	          window.oRequestAnimationFrame ||
 	          window.msRequestAnimationFrame ||
 	          function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element){
-	      window.setTimeout(callback, 1000 / 60);
+	      window.setTimeout(callback, 20);
 	  };
 
 	  var canvas = document.getElementById('myCanvas');
@@ -103,13 +103,20 @@
 	  var moveSet=[];
 	  var bulletSet=[];
 	  var otherSet=[];
+	  var mapload=0;
+	  var castleload=0;
+	  var planeload=0;
+	  var bulletload=0;
 
 	  var map = new Image();
 	  map.src = 'map.png';
+	  map.onload=function(){
+	      mapload=1;
+	  }
 	  var UpperLeftX=0;
 	  var UpperLeftY=map.height/4;
 	  var sourceWidth=map.width/2;
-	  var sourceHeight=map.height/2;
+	  var sourceHeight=map.height/2;	      
 
 	  var castle = new Image();
 	  var destWidth = 100;
@@ -119,7 +126,9 @@
 	  objectSet.push(makeObject(castle,0,destX,destY,destWidth,destHeight,destX,destY,0,2000,2000,0,0));
 	  otherSet.push(0);
 	  castle.src = 'castle.png';
-
+	  castle.onload = function(){
+	      castleload=1;
+	  }
 	  
 	  var plane = new Image();	
 	  destWidth = 111;
@@ -129,9 +138,15 @@
 	  objectSet.push(makeObject(plane,0,destX,destY,destWidth,destHeight,destX,destY,10,100,100,0,1));
 	  moveSet.push(1);	  
 	  plane.src = 'plane.png';
+	  plane.onload = function(){
+	      planeload=1;
+	  }
 
 	  var bullet = new Image();
 	  bullet.src = 'bullet.png';
+	  bullet.onload = function(){
+	      bulletload=1;
+	  }
 
 	  function doClick(evt){
 	      for (var i=0;i<moveSet.length;i++){
@@ -338,11 +353,8 @@
 	      }	      
 	  }
 
-
-	      
-
 	  function drawBackGround() {
-	      var destWidth = canvas.width;
+     	      var destWidth = canvas.width;
 	      var destHeight = canvas.height;
 	      var destX = canvas.width/2;
 	      var destY = canvas.height/2;
@@ -351,19 +363,20 @@
 	  }
 
 	  function drawLoop() {
-	      drawBackGround();
-	      moves();
-	      hitTest();
-	      destroy();
-	      draws();
-	      if (otherSet.length==0){
-		  context.font = '60pt Calibri';
-		  context.textAlign= 'center';
-		  context.textBasline= 'middle';
-		  context.fillStyle = 'red';
-		  context.fillText('You Win!', canvas.width/2, canvas.height/2);
-		  
-		  return;
+	      if (mapload==1 && planeload==1 && castleload==1 && bulletload==1){
+		  drawBackGround();
+		  moves();
+		  hitTest();
+		  destroy();
+		  draws();
+		  if (otherSet.length==0){
+		      context.font = '60pt Calibri';
+		      context.textAlign= 'center';
+		      context.textBasline= 'middle';
+		      context.fillStyle = 'red';
+		      context.fillText('You Win!', canvas.width/2, canvas.height/2);		  
+		      return;
+		  }
 	      }
 	      reqFrame(drawLoop);	
 	  }
@@ -379,9 +392,7 @@
 
 	  canvas.addEventListener("click",doClick,false);
 	  window.addEventListener("keydown",doShoot,false);
-	  drawBackGround();
 	  drawLoop();
-
       }
 
 </script>
