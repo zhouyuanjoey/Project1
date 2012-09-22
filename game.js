@@ -29,7 +29,6 @@ window.onload = function () {
         "maxlife": 0,
         "life": 0,
         "destroy": 0,
-        "belong": 0,
         "lastshoot": 0,
         draw: function () {
             simrotateImage(this.rot, this.img, this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
@@ -123,7 +122,7 @@ window.onload = function () {
         context.translate(-destX, -destY);
     }
 
-    function makeObject(img, rot, x, y, width, height, speed, maxlife, belong) {
+    function makeObject(img, rot, x, y, width, height, speed, maxlife) {
         Empty = function () { };
         Empty.prototype = object; // don't ask why not ball.prototype=aBall;
         obj = new Empty();
@@ -138,7 +137,6 @@ window.onload = function () {
         obj.maxlife = maxlife;
         obj.life = maxlife;
         obj.destroy = 0;
-        obj.belong = belong;
         obj.lastshoot = -1;
         return obj;
     }
@@ -162,7 +160,6 @@ window.onload = function () {
         obj.speed = shooter.speed + 15;
         obj.rotToDxDy();
         obj.destroy = 0;
-        obj.belong = shooter.belong;
         return obj;
     }
 
@@ -179,7 +176,6 @@ window.onload = function () {
         obj.speed = 5;
         obj.rotToDxDy();
         obj.destroy = 0;
-        obj.belong = launcher.belong;
         return obj;
     }
 
@@ -215,7 +211,7 @@ window.onload = function () {
     var destHeight = 100;
     var destX = 1.8*canvas.width;
     var destY = canvas.height;
-    objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, 0, 2000, 0));
+    objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, 0, 2000));
     otherSet.push(0);
     castle.src = 'castle.png';
     castle.onload = function () {
@@ -227,7 +223,7 @@ window.onload = function () {
     destHeight = 70;
     destX = 50 + UpperLeftX;
     destY = canvas.height / 2 + UpperLeftY;
-    objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, 0, 100, 1));
+    objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, 0, 100));
     moveSet.push(1);
     plane.src = 'plane.png';
     plane.onload = function () {
@@ -302,7 +298,7 @@ window.onload = function () {
     function launchDrone() {
         for (var i = 0; i < otherSet.length; i++) {
             var time = (new Date()).getMilliseconds();
-            if ((time - objectSet[otherSet[i]].lastshoot < 500 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=0) ||  (time - objectSet[otherSet[i]].lastshoot < -499 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=-999)){
+            if ((time - objectSet[otherSet[i]].lastshoot < 250 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=0) ||  (time - objectSet[otherSet[i]].lastshoot < -749 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=-999)){
                 continue;
             }
             objectSet[otherSet[i]].lastshoot = time;
@@ -351,7 +347,8 @@ window.onload = function () {
         bounce();
         for (var i = droneSet.length - 1; i >= 0; i--) {
             objectSet[droneSet[i]].normalize();
-        }
+	    objectSet[droneSet[i]].rot=-Math.atan2(objectSet[droneSet[i]].dy,objectSet[droneSet[i]].dx);	    
+        }	
     }
 
     function bounce() {
@@ -398,38 +395,39 @@ window.onload = function () {
             if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= map.width / sourceWidth * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= map.height / sourceHeight * canvas.height) {
                 objectSet[bulletSet[i]].destroy = 1;
             }
-            else {
-                for (var j = 0; j < otherSet.length; j++) {
-                    if (objectSet[bulletSet[i]].belong == otherSet[j]) {
-                        continue;
-                    }
-                    if (BoundCheck(objectSet[bulletSet[i]],objectSet[otherSet[j]])){
-                        objectSet[bulletSet[i]].destroy = 1;
-		        objectSet[otherSet[j]].life -= 100;
-		        if (objectSet[otherSet[j]].life <= 0) {
-			    objectSet[otherSet[j]].destroy = 1;
-			}
-			break;
+	    
+	    for (var j = 0; j < otherSet.length; j++) {
+		if (BoundCheck(objectSet[bulletSet[i]],objectSet[otherSet[j]])){
+		    objectSet[bulletSet[i]].destroy = 1;
+		    objectSet[otherSet[j]].life -= 100;
+		    if (objectSet[otherSet[j]].life <= 0) {
+			objectSet[otherSet[j]].destroy = 1;
 		    }
+			break;
 		}
+	    }
+
+	    for (var j = 0; j < droneSet.length; j++) {
+		if (BoundCheck(objectSet[bulletSet[i]],objectSet[droneSet[j]])){
+		    objectSet[bulletSet[i]].destroy = 1;
+		    objectSet[droneSet[j]].destroy = 1;
+		    break;
+		}    
 	    }
 	}
 
 	for (var i = 0; i < droneSet.length; i++) {           
 	    for (var j = 0; j < moveSet.length; j++) {
-		if (objectSet[droneSet[i]].belong == moveSet[j]) {
-		    continue;
-		}
 		if (BoundCheck(objectSet[droneSet[i]],objectSet[moveSet[j]])){
 		    objectSet[droneSet[i]].destroy = 1;
-		    objectSet[moveSet[j]].life -= 5;
+		    objectSet[moveSet[j]].life -= 5;		  
 		    if (objectSet[moveSet[j]].life <= 0) {
 			objectSet[moveSet[j]].destroy = 1;
 		    }
 		    break;
 		}
 	    }            
-        }
+        }	
     }
 
 
@@ -463,7 +461,6 @@ window.onload = function () {
             else {
                 i++;
             }
-            i++;
         }
         i = 0;
         while (i < moveSet.length) {
@@ -495,7 +492,6 @@ window.onload = function () {
             else {
                 i++;
             }
-            i++;
         }
         i = 0;
         while (i < otherSet.length) {
@@ -526,8 +522,8 @@ window.onload = function () {
             else {
                 i++;
             }
-            i++;
         }
+
 	i = 0;
         while (i < droneSet.length) {
             if (objectSet[droneSet[i]].destroy == 1) {
@@ -557,9 +553,7 @@ window.onload = function () {
             else {
                 i++;
             }
-            i++;
         }
-
     }
 
     function drawBackGround() {
