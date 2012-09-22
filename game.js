@@ -10,8 +10,6 @@ window.onload = function () {
 
     var canvas = document.getElementById('myCanvas');
     var context = canvas.getContext('2d');
-    var sightx = 600;
-    var sighty = 200;
     var speedLimit = 10;
     var acceleration = .1;
     var rotationSpeed = .1;
@@ -179,52 +177,42 @@ window.onload = function () {
         return obj;
     }
 
-    var objectSet = [];
-    var moveSet = [];
-    var bulletSet = [];
-    var droneSet = [];
-    var otherSet = [];
-    var mapload = 0;
-    var castleload = 0;
-    var planeload = 0;
-    var bulletload = 0;
-    var shootBullet = 0;
-    var shootDrone = 0;
-    var Wdown = 0;
-    var Sdown = 0;
-    var Adown = 0;
-    var Ddown = 0;
-
+    var objectSet;
+    var moveSet;
+    var bulletSet;
+    var droneSet;
+    var otherSet;
+    var mapload;
+    var castleload;
+    var planeload;
+    var bulletload;
+    var shootBullet;
+    var shootDrone;
+    var Wdown;
+    var Sdown;
+    var Adown;
+    var Ddown;
+    var UpperLeftX;
+    var UpperLeftY;
+    var timer=-1;
+    var curLevel=1;
+    var maxLevel=5;
 
     var map = new Image();
     map.src = 'map.png';
     map.onload = function () {
         mapload = 1;
     }
-    var UpperLeftX = 0;
-    var UpperLeftY = canvas.height / 2;
     var sourceWidth = map.width / 2;
     var sourceHeight = map.height / 2;
 
     var castle = new Image();
-    var destWidth = 100;
-    var destHeight = 100;
-    var destX = 1.8*canvas.width;
-    var destY = canvas.height;
-    objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, 0, 2000));
-    otherSet.push(0);
     castle.src = 'castle.png';
     castle.onload = function () {
         castleload = 1;
     }
 
     var plane = new Image();
-    destWidth = 111;
-    destHeight = 70;
-    destX = 50 + UpperLeftX;
-    destY = canvas.height / 2 + UpperLeftY;
-    objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, 0, 100));
-    moveSet.push(1);
     plane.src = 'plane.png';
     plane.onload = function () {
         planeload = 1;
@@ -235,6 +223,34 @@ window.onload = function () {
     bullet.src = 'bullet.png';
     bullet.onload = function () {
         bulletload = 1;
+    }
+
+    function init(){
+	objectSet = [];
+	moveSet = [];
+	bulletSet = [];
+	droneSet = [];
+	otherSet = [];
+	shootBullet = 0;
+	shootDrone = 0;
+	Wdown = 0;
+	Sdown = 0;
+	Adown = 0;
+	Ddown = 0;
+	UpperLeftX = 0;
+	UpperLeftY = canvas.height / 2;
+	var destWidth = 100;
+	var destHeight = 100;
+	var destX = 1.8*canvas.width;
+	var destY = canvas.height;
+	objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, 0, 2000));
+	otherSet.push(0);
+	destWidth = 111;
+	destHeight = 70;
+	destX = 50 + UpperLeftX;
+	destY = canvas.height / 2 + UpperLeftY;
+	objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, 0, 100));
+	moveSet.push(1);
     }
 
     function draws() {
@@ -298,7 +314,7 @@ window.onload = function () {
     function launchDrone() {
         for (var i = 0; i < otherSet.length; i++) {
             var time = (new Date()).getMilliseconds();
-            if ((time - objectSet[otherSet[i]].lastshoot < 250 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=0) ||  (time - objectSet[otherSet[i]].lastshoot < -749 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=-999)){
+            if ((time +1000- objectSet[otherSet[i]].lastshoot) % 1000 < 250){
                 continue;
             }
             objectSet[otherSet[i]].lastshoot = time;
@@ -311,7 +327,7 @@ window.onload = function () {
     function launchBullet() {
         for (var i = 0; i < moveSet.length; i++) {
             var time = (new Date()).getMilliseconds();
-	    if ((time - objectSet[moveSet[i]].lastshoot < 250 && time - objectSet[moveSet[i]].lastshoot && time - objectSet[moveSet[i]].lastshoot>=0) ||  (time - objectSet[moveSet[i]].lastshoot < -749 && time - objectSet[moveSet[i]].lastshoot && time - objectSet[moveSet[i]].lastshoot>=-999)){
+	    if ((time + 1000- objectSet[moveSet[i]].lastshoot) % 1000 < 250){
                 continue;
             }
             objectSet[moveSet[i]].lastshoot = time;
@@ -601,11 +617,21 @@ window.onload = function () {
         }
     }
 
+    function drawLevel() {
+	context.font = '20pt Calibri';
+	context.textAlign = 'center';
+	context.textBasline = 'middle';
+	context.fillStyle = 'white';
+	context.fillText('Level       '+curLevel, canvas.width / 2, 40);
+    }
+	
+	
 
 
     function drawLoop() {
         if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1) {
             drawBackGround();
+	    drawLevel();
             adjustDrones();
             react();
             moves();
@@ -613,12 +639,31 @@ window.onload = function () {
             destroy();
             draws();
             if (otherSet.length == 0) {
-                context.font = '60pt Calibri';
-                context.textAlign = 'center';
-                context.textBasline = 'middle';
-                context.fillStyle = 'red';
-                context.fillText('You Win!', canvas.width / 2, canvas.height / 2);
-                return;
+		if (curLevel==maxLevel){
+		    context.font = '60pt Calibri';
+		    context.textAlign = 'center';
+		    context.textBasline = 'middle';
+		    context.fillStyle = 'red';
+		    context.fillText('You Win!', canvas.width / 2, canvas.height / 2);
+		    return;
+		}
+		else{
+		    context.font = '60pt Calibri';
+		    context.textAlign = 'center';
+		    context.textBasline = 'middle';
+		    context.fillStyle = 'blue';
+		    context.fillText('Level   '+curLevel+'       Complete!', canvas.width / 2, canvas.height / 2);
+		    if (timer == -1){
+			timer = (new Date()).getSeconds();
+		    }
+		    else{
+			if (((new Date()).getSeconds()+60-timer)%60>=3){
+			    curLevel++;
+			    init();
+			    timer=-1;
+			}
+		    }
+		}
             }
 	    else{
 		if (moveSet.length == 0){
@@ -682,5 +727,6 @@ window.onload = function () {
 
     window.addEventListener("keyup", KeyUp, false);
     window.addEventListener("keydown", KeyDown, false);
+    init();
     drawLoop();
 }
