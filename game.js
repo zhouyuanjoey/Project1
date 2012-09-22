@@ -194,9 +194,9 @@ window.onload = function () {
     var Ddown;
     var UpperLeftX;
     var UpperLeftY;
-    var timer=-1;
-    var curLevel=1;
-    var maxLevel=5;
+    var timer;
+    var curLevel;
+    var maxLevel=3;
 
     var map = new Image();
     map.src = 'map.png';
@@ -239,6 +239,7 @@ window.onload = function () {
 	Ddown = 0;
 	UpperLeftX = 0;
 	UpperLeftY = canvas.height / 2;
+	timer=-1;
 	var destWidth = 100;
 	var destHeight = 100;
 	var destX = 1.8*canvas.width;
@@ -625,8 +626,27 @@ window.onload = function () {
 	context.fillText('Level       '+curLevel, canvas.width / 2, 40);
     }
 	
-	
+    function starting(){
+	context.font = '80pt Calibri';
+	context.textAlign = 'center';
+	context.textBasline = 'middle';
+	context.fillStyle = 'black';
+	context.fillText('Protect Our Planet', canvas.width / 2, canvas.height / 2 - 100);
+	context.font = '40pt Calibri';
+	context.fillText('Press Enter to Start', canvas.width / 2, canvas.height / 2 + 100);		
+    }
 
+    function ending(){
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	context.font = '40pt Calibri';
+	context.textAlign = 'center';
+	context.textBasline = 'middle';
+	context.fillStyle = 'black';
+	context.fillText('You\'ve Defeated the Enemies!', canvas.width / 2, canvas.height / 2 - 100);
+	context.fillText('Designer: Zhouyuan Li and Joseph Francke', canvas.width / 2, canvas.height / 2 + 100);
+	context.font = '20pt Calibri';
+	context.fillText('Press Enter to Play the Game again', canvas.width / 2, canvas.height / 2 + 200);	
+    }
 
     function drawLoop() {
         if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1) {
@@ -640,11 +660,7 @@ window.onload = function () {
             draws();
             if (otherSet.length == 0) {
 		if (curLevel==maxLevel){
-		    context.font = '60pt Calibri';
-		    context.textAlign = 'center';
-		    context.textBasline = 'middle';
-		    context.fillStyle = 'red';
-		    context.fillText('You Win!', canvas.width / 2, canvas.height / 2);
+		    ending();
 		    return;
 		}
 		else{
@@ -652,7 +668,7 @@ window.onload = function () {
 		    context.textAlign = 'center';
 		    context.textBasline = 'middle';
 		    context.fillStyle = 'blue';
-		    context.fillText('Level   '+curLevel+'       Complete!', canvas.width / 2, canvas.height / 2);
+		    context.fillText('Level   '+curLevel+'       Complete', canvas.width / 2, canvas.height / 2);
 		    if (timer == -1){
 			timer = (new Date()).getSeconds();
 		    }
@@ -660,7 +676,6 @@ window.onload = function () {
 			if (((new Date()).getSeconds()+60-timer)%60>=3){
 			    curLevel++;
 			    init();
-			    timer=-1;
 			}
 		    }
 		}
@@ -699,6 +714,11 @@ window.onload = function () {
             case 68:
                 Ddown = 1;
                 break;
+	    case 13:
+	        curLevel=1;
+	        init();
+	        drawLoop();
+	        break;
         }
     }
 
@@ -725,8 +745,7 @@ window.onload = function () {
         }
     }
 
+    starting();
     window.addEventListener("keyup", KeyUp, false);
     window.addEventListener("keydown", KeyDown, false);
-    init();
-    drawLoop();
 }
