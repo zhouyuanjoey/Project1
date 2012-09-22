@@ -59,13 +59,13 @@ window.onload = function () {
         moveB: function () {
             this.x += this.dx;
             this.y += this.dy;
-            if (this.x > 2 * canvas.width) {
+            if (this.x > map.width / sourceWidth * canvas.width) {
                 if (this.dx > 0) {
                     this.dx = -this.dx;
                 }
             }
 
-            if (this.y > 2 * canvas.height) {
+            if (this.y > map.height / sourceHeight * canvas.height) {
                 if (this.dy > 0) {
                     this.dy = -this.dy;
                 }
@@ -206,15 +206,15 @@ window.onload = function () {
         mapload = 1;
     }
     var UpperLeftX = 0;
-    var UpperLeftY = map.height / 4;
+    var UpperLeftY = canvas.height / 2;
     var sourceWidth = map.width / 2;
     var sourceHeight = map.height / 2;
 
     var castle = new Image();
     var destWidth = 100;
     var destHeight = 100;
-    var destX = (900 - UpperLeftX) / sourceWidth * canvas.width;
-    var destY = (452 - UpperLeftY) / sourceHeight * canvas.height;
+    var destX = 1.8*canvas.width;
+    var destY = canvas.height;
     objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, 0, 2000, 0));
     otherSet.push(0);
     castle.src = 'castle.png';
@@ -225,8 +225,8 @@ window.onload = function () {
     var plane = new Image();
     destWidth = 111;
     destHeight = 70;
-    destX = 50;
-    destY = canvas.height / 2;
+    destX = 50 + UpperLeftX;
+    destY = canvas.height / 2 + UpperLeftY;
     objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, 0, 100, 1));
     moveSet.push(1);
     plane.src = 'plane.png';
@@ -262,17 +262,18 @@ window.onload = function () {
         */
         //if we could do this for all non-stationary bojects that would be nice
         //---------------------------------------------------------------------------------------------------------------
-        for (var i = 0; i < moveSet.length; i++) {
-            objectSet[moveSet[i]].moveNB();
-        }
+	 for (var i = 0; i < moveSet.length; i++) {
+	     objectSet[moveSet[i]].moveNB();
+	 }
+        
 
         UpperLeftX = objectSet[moveSet[0]].x - canvas.width / 2;
         UpperLeftY = objectSet[moveSet[0]].y - canvas.height / 2;
 
         if (UpperLeftX < 0) { UpperLeftX = 0 }
-        if (UpperLeftX > canvas.width) { UpperLeftX = canvas.width }
+        if (UpperLeftX > (map.width / sourceWidth - 1 ) * canvas.width) { UpperLeftX =  (map.width / sourceWidth - 1 ) * canvas.width}
         if (UpperLeftY < 0) { UpperLeftY = 0 }
-        if (UpperLeftY > canvas.height) { UpperLeftY = canvas.height }
+        if (UpperLeftY > (map.height / sourceHeight - 1 ) * canvas.height) { UpperLeftY = (map.height / sourceHeight - 1 ) * canvas.height }
 
         for (var i = 0; i < bulletSet.length; i++) {
             objectSet[bulletSet[i]].moveNB();
@@ -286,14 +287,14 @@ window.onload = function () {
             if (objectSet[moveSet[i]].x < 0) {
                 objectSet[moveSet[i]].x = 0;
             }
-            if (objectSet[moveSet[i]].x >= 2 * canvas.width) {
-                objectSet[moveSet[i]].x = 2 * canvas.width - 1;
+            if (objectSet[moveSet[i]].x >= map.width / sourceWidth  * canvas.width) {
+                objectSet[moveSet[i]].x =  map.width / sourceWidth * canvas.width - 1;
             }
             if (objectSet[moveSet[i]].y < 0) {
                 objectSet[moveSet[i]].y = 0;
             }
-            if (objectSet[moveSet[i]].y >= 2 * canvas.height) {
-                objectSet[moveSet[i]].y = 2 * canvas.height - 1;
+            if (objectSet[moveSet[i]].y >= map.height / sourceHeight * canvas.height) {
+                objectSet[moveSet[i]].y = map.height / sourceHeight * canvas.height - 1;
             }
         }
     }
@@ -381,7 +382,7 @@ window.onload = function () {
 
     function hitTest() {
         for (var i = 0; i < bulletSet.length; i++) {
-            if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= 2 * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= 2 * canvas.height) {
+            if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= map.width / sourceWidth * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= map.height / sourceHeight * canvas.height) {
                 objectSet[bulletSet[i]].destroy = 1;
             }
             else {
@@ -522,9 +523,9 @@ window.onload = function () {
     }
 
     function drawBackGround() {
-        var xRatio = 2*canvas.width/map.width;
-        var yRatio = 2*canvas.height/map.height;
-        context.drawImage(map, UpperLeftX/xRatio, UpperLeftY/yRatio, .5*map.width, .5*map.height, 0, 0, canvas.width, canvas.height);
+        var xRatio = canvas.width / sourceWidth;
+        var yRatio = canvas.height / sourceHeight;
+        context.drawImage(map, UpperLeftX/xRatio, UpperLeftY/yRatio, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
     }
 
     function react() {
