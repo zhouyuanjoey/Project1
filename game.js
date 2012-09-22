@@ -301,8 +301,8 @@ window.onload = function () {
 
     function launchDrone() {
         for (var i = 0; i < otherSet.length; i++) {
-            var time = (new Date()).getSeconds();
-            if (time == objectSet[otherSet[i]].lastshoot) {
+            var time = (new Date()).getMilliseconds();
+            if ((time - objectSet[otherSet[i]].lastshoot < 500 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=0) ||  (time - objectSet[otherSet[i]].lastshoot < -499 && time - objectSet[otherSet[i]].lastshoot && time - objectSet[otherSet[i]].lastshoot>=-999)){
                 continue;
             }
             objectSet[otherSet[i]].lastshoot = time;
@@ -314,8 +314,8 @@ window.onload = function () {
 
     function launchBullet() {
         for (var i = 0; i < moveSet.length; i++) {
-            var time = (new Date()).getSeconds();
-            if (time == objectSet[moveSet[i]].lastshoot) {
+            var time = (new Date()).getMilliseconds();
+	    if ((time - objectSet[moveSet[i]].lastshoot < 250 && time - objectSet[moveSet[i]].lastshoot && time - objectSet[moveSet[i]].lastshoot>=0) ||  (time - objectSet[moveSet[i]].lastshoot < -749 && time - objectSet[moveSet[i]].lastshoot && time - objectSet[moveSet[i]].lastshoot>=-999)){
                 continue;
             }
             objectSet[moveSet[i]].lastshoot = time;
@@ -352,7 +352,6 @@ window.onload = function () {
         for (var i = droneSet.length - 1; i >= 0; i--) {
             objectSet[droneSet[i]].normalize();
         }
-
     }
 
     function bounce() {
@@ -380,45 +379,56 @@ window.onload = function () {
         }
     }
 
+    function BoundCheck(obj1,obj2){
+	var xd=obj1.x-obj2.x;
+	var yd=obj1.y-obj2.y;
+	var ox=Math.cos(obj2.rot);
+	var oy=-Math.sin(obj2.rot)
+	if (Math.abs((xd*ox+yd*oy)/Math.sqrt(ox*ox+oy*oy))<obj2.width/2 && Math.abs((-oy*xd+ox*yd)/Math.sqrt(ox*ox+oy*oy))<obj2.height/2){
+	    return 1;
+	}
+	return 0;
+    }
+
+	
+	
+
     function hitTest() {
         for (var i = 0; i < bulletSet.length; i++) {
             if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= map.width / sourceWidth * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= map.height / sourceHeight * canvas.height) {
                 objectSet[bulletSet[i]].destroy = 1;
             }
             else {
-                var collide = 0;
-                for (var j = 0; j < moveSet.length; j++) {
-                    if (objectSet[bulletSet[i]].belong == moveSet[j]) {
-                        continue;
-                    }
-                    if (objectSet[bulletSet[i]].x >= objectSet[moveSet[j]].x - objectSet[moveSet[j]].width / 2 && objectSet[bulletSet[i]].x <= objectSet[moveSet[j]].x + objectSet[moveSet[j]].width / 2 && objectSet[bulletSet[i]].y >= objectSet[moveSet[j]].y - objectSet[moveSet[j]].height / 2 && objectSet[bulletSet[i]].y <= objectSet[moveSet[j]].y + objectSet[moveSet[j]].height / 2) {
-                        objectSet[bulletSet[i]].destroy = 1;
-                        objectSet[moveSet[j]].life -= 100;
-                        if (objectSet[moveSet[j]].life <= 0) {
-                            objectSet[moveSet[j]].destroy = 1;
-                        }
-                        collide = 1;
-                        break;
-                    }
-                }
-                if (collide == 1) {
-                    continue;
-                }
                 for (var j = 0; j < otherSet.length; j++) {
                     if (objectSet[bulletSet[i]].belong == otherSet[j]) {
                         continue;
                     }
-                    if (objectSet[bulletSet[i]].x >= objectSet[otherSet[j]].x - objectSet[otherSet[j]].width / 2 && objectSet[bulletSet[i]].x <= objectSet[otherSet[j]].x + objectSet[otherSet[j]].width / 2 && objectSet[bulletSet[i]].y >= objectSet[otherSet[j]].y - objectSet[otherSet[j]].height / 2 && objectSet[bulletSet[i]].y <= objectSet[otherSet[j]].y + objectSet[otherSet[j]].height / 2) {
+                    if (BoundCheck(objectSet[bulletSet[i]],objectSet[otherSet[j]])){
                         objectSet[bulletSet[i]].destroy = 1;
-                        objectSet[otherSet[j]].life -= 100;
-                        if (objectSet[otherSet[j]].life <= 0) {
-                            objectSet[otherSet[j]].destroy = 1;
-                        }
-                        collide = 1;
-                        break;
-                    }
-                }
-            }
+		        objectSet[otherSet[j]].life -= 100;
+		        if (objectSet[otherSet[j]].life <= 0) {
+			    objectSet[otherSet[j]].destroy = 1;
+			}
+			break;
+		    }
+		}
+	    }
+	}
+
+	for (var i = 0; i < droneSet.length; i++) {           
+	    for (var j = 0; j < moveSet.length; j++) {
+		if (objectSet[droneSet[i]].belong == moveSet[j]) {
+		    continue;
+		}
+		if (BoundCheck(objectSet[droneSet[i]],objectSet[moveSet[j]])){
+		    objectSet[droneSet[i]].destroy = 1;
+		    objectSet[moveSet[j]].life -= 5;
+		    if (objectSet[moveSet[j]].life <= 0) {
+			objectSet[moveSet[j]].destroy = 1;
+		    }
+		    break;
+		}
+	    }            
         }
     }
 
@@ -511,8 +521,6 @@ window.onload = function () {
                         droneSet[j]--;
                     }
                 }
-
-
                 otherSet.splice(i, 1);
             }
             else {
@@ -520,6 +528,38 @@ window.onload = function () {
             }
             i++;
         }
+	i = 0;
+        while (i < droneSet.length) {
+            if (objectSet[droneSet[i]].destroy == 1) {
+                objectSet.splice(droneSet[i], 1);
+                for (var j = 0; j < bulletSet.length; j++) {
+                    if (bulletSet[j] > droneSet[i]) {
+                        bulletSet[j]--;
+                    }
+                }
+                for (var j = 0; j < moveSet.length; j++) {
+                    if (moveSet[j] > droneSet[i]) {
+                        moveSet[j]--;
+                    }
+                }
+                for (var j = 0; j < otherSet.length; j++) {
+                    if (otherSet[j] > droneSet[i]) {
+                        otherSet[j]--;
+                    }
+                }
+                for (var j = 0; j < droneSet.length; j++) {
+                    if (droneSet[j] > droneSet[i]) {
+                        droneSet[j]--;
+                    }
+                }
+                droneSet.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+            i++;
+        }
+
     }
 
     function drawBackGround() {
@@ -586,6 +626,16 @@ window.onload = function () {
                 context.fillText('You Win!', canvas.width / 2, canvas.height / 2);
                 return;
             }
+	    else{
+		if (moveSet.length == 0){
+		    context.font = '60pt Calibri';
+		    context.textAlign = 'center';
+		    context.textBasline = 'middle';
+		    context.fillStyle = 'red';
+		    context.fillText('You Lose!', canvas.width / 2, canvas.height / 2);
+		    return;
+		}
+	    }
         }
         reqFrame(drawLoop);
     }
