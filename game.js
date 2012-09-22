@@ -28,7 +28,18 @@ window.onload = function () {
         "life": 0,
         "destroy": 0,
         "lastshoot": 0,
+	"lastshield": 0,
+	"shield": 0,
         draw: function () {
+	    if (this.shield == 1){
+		context.fillStyle='blue';
+		context.strokeStyle='white';
+		context.lineWidth=2;
+		context.beginPath();
+		context.arc(this.x - UpperLeftX,this.y-UpperLeftY,Math.max(this.width/2,this.height/2),0,2*Math.PI,false);
+		context.stroke();
+		context.fill();
+	    }
             simrotateImage(this.rot, this.img, this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
             if (this.maxlife != 0) {
                 var transX = this.x - UpperLeftX;
@@ -136,6 +147,8 @@ window.onload = function () {
         obj.life = maxlife;
         obj.destroy = 0;
         obj.lastshoot = -1;
+	obj.lastshield = -1;
+	obj.shield = 0;
         return obj;
     }
 
@@ -192,10 +205,12 @@ window.onload = function () {
     var Sdown;
     var Adown;
     var Ddown;
+    var openShield;
     var UpperLeftX;
     var UpperLeftY;
     var timer;
     var curLevel;
+    var start=0;
     var maxLevel=3;
 
     var map = new Image();
@@ -237,6 +252,7 @@ window.onload = function () {
 	Sdown = 0;
 	Adown = 0;
 	Ddown = 0;
+	openShield = 0;
 	UpperLeftX = 0;
 	UpperLeftY = canvas.height / 2;
 	timer=-1;
@@ -338,6 +354,20 @@ window.onload = function () {
         }
     }
 
+    function launchShield() {
+        for (var i = 0; i < moveSet.length; i++) {
+            var time = (new Date()).getSeconds();
+	    if ((time + 60- objectSet[moveSet[i]].lastshield) % 60 < 6){
+                continue;
+            }
+            objectSet[moveSet[i]].lastshield = time;
+	    objectSet[moveSet[i]].shield = 1;
+        }
+    }
+
+    
+
+
     var ali = .9;
     function adjustDrones() {
         var newDX = new Array(droneSet.length);
@@ -437,9 +467,11 @@ window.onload = function () {
 	    for (var j = 0; j < moveSet.length; j++) {
 		if (BoundCheck(objectSet[droneSet[i]],objectSet[moveSet[j]])){
 		    objectSet[droneSet[i]].destroy = 1;
-		    objectSet[moveSet[j]].life -= 5;		  
-		    if (objectSet[moveSet[j]].life <= 0) {
-			objectSet[moveSet[j]].destroy = 1;
+		    if (objectSet[moveSet[j]].shield==0){
+			objectSet[moveSet[j]].life -= 5;		  
+			if (objectSet[moveSet[j]].life <= 0) {
+			    objectSet[moveSet[j]].destroy = 1;
+			}
 		    }
 		    break;
 		}
@@ -586,6 +618,10 @@ window.onload = function () {
         if (shootDrone == 1) {
             launchDrone();
         }
+	if (openShield == 1){
+	    launchShield();
+	}
+
         if (Wdown) {
             for (var i = 0; i < moveSet.length; i++) {
                 objectSet[moveSet[i]].speed += acceleration;
@@ -637,6 +673,7 @@ window.onload = function () {
     }
 
     function ending(){
+	start=0;
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	context.font = '40pt Calibri';
 	context.textAlign = 'center';
@@ -648,10 +685,22 @@ window.onload = function () {
 	context.fillText('Press Enter to Play the Game again', canvas.width / 2, canvas.height / 2 + 200);	
     }
 
+    function effect(){
+	for (var i = 0; i < moveSet.length; i++) {
+	    var time = (new Date()).getSeconds();
+	    if ((time + 60- objectSet[moveSet[i]].lastshield) % 60 >=2){
+                objectSet[moveSet[i]].shield=0;
+            }
+	}
+    }
+	    
+	
+
     function drawLoop() {
         if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1) {
             drawBackGround();
 	    drawLevel();
+	    effect();
             adjustDrones();
             react();
             moves();
@@ -714,10 +763,16 @@ window.onload = function () {
             case 68:
                 Ddown = 1;
                 break;
+	    case 80:
+	        openShield = 1;
+	        break;
 	    case 13:
-	        curLevel=1;
-	        init();
-	        drawLoop();
+	        if (start==0){
+		    start=1;
+		    curLevel=1;
+		    init();
+		    drawLoop();
+		}
 	        break;
         }
     }
@@ -742,6 +797,9 @@ window.onload = function () {
             case 68:
                 Ddown = 0;
                 break;
+	    case 80:
+	        openShield = 1;
+	        break;
         }
     }
 
