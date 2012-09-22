@@ -1,10 +1,3 @@
-
-// I would like to make it so that the player's ship accelerates and deccelerates  (capped at a max speed) while wasd keys are held,
-// that way the player has more control of the ship and we can use the same movement code for all the objects (with a stored dx, dy)
-// this will save on computation of diagonal movements (less sin and cosine calculations), which will becomes important for a large number of boids
-// I added the dx, dy variable to object prototype and put in many comments on my thoughts on how I would implement things.
-
-
 window.onload = function () {
     var reqFrame = window.requestAnimationFrame ||
 	          window.webkitRequestAnimationFrame ||
@@ -37,22 +30,24 @@ window.onload = function () {
         "life": 0,
         "destroy": 0,
         "belong": 0,
-	"lastshoot" : 0, 
+        "lastshoot": 0,
         draw: function () {
-            simrotateImage(this.rot, this.img, this.x, this.y, this.width, this.height);
+            simrotateImage(this.rot, this.img, this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
             if (this.maxlife != 0) {
+                var transX = this.x - UpperLeftX;
+                var transY = this.y - UpperLeftY;
                 context.fillStyle = 'red';
                 context.beginPath();
-                context.rect(this.x - 0.3 * this.width, this.y - 0.7 * this.height, 0.6 * this.life / this.maxlife * this.width, 0.1 * this.height);
+                context.rect(transX - 0.3 * this.width, transY - 0.7 * this.height, 0.6 * this.life / this.maxlife * this.width, 0.1 * this.height);
                 context.fill();
                 context.fillStyle = 'black';
                 context.beginPath();
-                context.rect(this.x - 0.3 * this.width + 0.6 * this.life / this.maxlife * this.width, this.y - 0.7 * this.height, 0.6 * (1 - this.life / this.maxlife) * this.width, 0.1 * this.height);
+                context.rect(transX - 0.3 * this.width + 0.6 * this.life / this.maxlife * this.width, transY - 0.7 * this.height, 0.6 * (1 - this.life / this.maxlife) * this.width, 0.1 * this.height);
                 context.fill();
                 context.lineWidth = 2;
                 context.strokeStyle = 'white';
                 context.beginPath();
-                context.rect(this.x - 0.3 * this.width, this.y - 0.7 * this.height, 0.6 * this.width, 0.1 * this.height);
+                context.rect(transX - 0.3 * this.width, transY - 0.7 * this.height, 0.6 * this.width, 0.1 * this.height);
                 context.stroke();
             }
         },
@@ -64,13 +59,13 @@ window.onload = function () {
         moveB: function () {
             this.x += this.dx;
             this.y += this.dy;
-            if (this.x > canvas.width) {
+            if (this.x > 2 * canvas.width) {
                 if (this.dx > 0) {
                     this.dx = -this.dx;
                 }
             }
 
-            if (this.y > canvas.height) {
+            if (this.y > 2 * canvas.height) {
                 if (this.dy > 0) {
                     this.dy = -this.dy;
                 }
@@ -96,7 +91,7 @@ window.onload = function () {
             this.dx = this.speed * Math.cos(this.rot);
             this.dy = this.speed * -Math.sin(this.rot);
         },
-
+        //modifies dx, dy so that direction is maintained and speed is what it should be
         normalize: function () {
             var z = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
             if (z < .001) {
@@ -144,7 +139,7 @@ window.onload = function () {
         obj.life = maxlife;
         obj.destroy = 0;
         obj.belong = belong;
-	obj.lastshoot = -1;
+        obj.lastshoot = -1;
         return obj;
     }
 
@@ -268,44 +263,18 @@ window.onload = function () {
         //if we could do this for all non-stationary bojects that would be nice
         //---------------------------------------------------------------------------------------------------------------
         for (var i = 0; i < moveSet.length; i++) {
-            objectSet[moveSet[i]].x += objectSet[moveSet[i]].dx;
-            objectSet[moveSet[i]].y += objectSet[moveSet[i]].dy;
-            if (objectSet[moveSet[i]].x < sightx) {
-                UpperLeftX -= (sightx - objectSet[moveSet[i]].x) / canvas.width * sourceWidth;
-            }
-
-            if (UpperLeftX < 0) {
-                UpperLeftX = 0;
-            }
-            if (objectSet[moveSet[i]].x > canvas.width - 1 - sightx) {
-                UpperLeftX += (objectSet[moveSet[i]].x - (canvas.width - 1 - sightx)) / canvas.width * sourceWidth;
-            }
-            if (UpperLeftX + sourceWidth > map.width - 1) {
-                UpperLeftX = map.width - 1 - sourceWidth;
-            }
-
-            if (objectSet[moveSet[i]].y < sighty) {
-                UpperLeftY -= (sighty - objectSet[moveSet[i]].y) / canvas.height * sourceHeight;
-            }
-
-            if (UpperLeftY < 0) {
-                UpperLeftY = 0;
-            }
-
-            if (objectSet[moveSet[i]].y > canvas.height - 1 - sighty) {
-                UpperLeftY += (objectSet[moveSet[i]].y - (canvas.height - 1 - sighty)) / canvas.height * sourceHeight;
-            }
-
-
-            if (UpperLeftY + sourceHeight > map.height - 1) {
-                UpperLeftY = map.height - 1 - sourceHeight;
-            }
+            objectSet[moveSet[i]].moveNB();
         }
 
+        UpperLeftX = objectSet[moveSet[0]].x - canvas.width / 2;
+        UpperLeftY = objectSet[moveSet[0]].y - canvas.height / 2;
+
+        if (UpperLeftX < 0) { UpperLeftX = 0 }
+        if (UpperLeftX > canvas.width) { UpperLeftX = canvas.width }
+        if (UpperLeftY < 0) { UpperLeftY = 0 }
+        if (UpperLeftY > canvas.height) { UpperLeftY = canvas.height }
+
         for (var i = 0; i < bulletSet.length; i++) {
-            //--------------------------------------------------------------------------------------------------
-            //changed bullets to the stored dx and dy movement
-            //---------------------------------------------------------------------------------------------------
             objectSet[bulletSet[i]].moveNB();
         }
 
@@ -313,34 +282,29 @@ window.onload = function () {
             objectSet[droneSet[i]].moveB();
         }
 
-        for (var i = 0; i < objectSet.length; i++) {
-            objectSet[i].x -= (UpperLeftX - preX) / sourceWidth * canvas.width;
-            objectSet[i].y -= (UpperLeftY - preY) / sourceHeight * canvas.height;
-        }
-
         for (var i = 0; i < moveSet.length; i++) {
             if (objectSet[moveSet[i]].x < 0) {
                 objectSet[moveSet[i]].x = 0;
             }
-            if (objectSet[moveSet[i]].x >= canvas.width) {
-                objectSet[moveSet[i]].x = canvas.width - 1;
+            if (objectSet[moveSet[i]].x >= 2 * canvas.width) {
+                objectSet[moveSet[i]].x = 2 * canvas.width - 1;
             }
             if (objectSet[moveSet[i]].y < 0) {
                 objectSet[moveSet[i]].y = 0;
             }
-            if (objectSet[moveSet[i]].y >= canvas.height) {
-                objectSet[moveSet[i]].y = canvas.height - 1;
+            if (objectSet[moveSet[i]].y >= 2 * canvas.height) {
+                objectSet[moveSet[i]].y = 2 * canvas.height - 1;
             }
         }
     }
 
     function launchDrone() {
         for (var i = 0; i < otherSet.length; i++) {
-	    var time=(new Date()).getSeconds();
-	    if (time==objectSet[otherSet[i]].lastshoot){
-	    	continue;
-	    }
-	    objectSet[otherSet[i]].lastshoot=time;
+            var time = (new Date()).getSeconds();
+            if (time == objectSet[otherSet[i]].lastshoot) {
+                continue;
+            }
+            objectSet[otherSet[i]].lastshoot = time;
 
             droneSet.push(objectSet.length);
             objectSet.push(makeDrone(objectSet[otherSet[i]], 1));
@@ -349,12 +313,12 @@ window.onload = function () {
 
     function launchBullet() {
         for (var i = 0; i < moveSet.length; i++) {
-	    var time=(new Date()).getSeconds();
-	    if (time==objectSet[moveSet[i]].lastshoot){
-	    	continue;
-	    }
-	    objectSet[moveSet[i]].lastshoot=time;
-	    
+            var time = (new Date()).getSeconds();
+            if (time == objectSet[moveSet[i]].lastshoot) {
+                continue;
+            }
+            objectSet[moveSet[i]].lastshoot = time;
+
             bulletSet.push(objectSet.length);
             objectSet.push(makeBullet(objectSet[moveSet[i]]));
         }
@@ -417,7 +381,7 @@ window.onload = function () {
 
     function hitTest() {
         for (var i = 0; i < bulletSet.length; i++) {
-            if (objectSet[bulletSet[i]].x > (map.width - 1 - UpperLeftX) / sourceWidth * canvas.width || objectSet[bulletSet[i]].x < (0 - UpperLeftX) / sourceWidth * canvas.width || objectSet[bulletSet[i]].y > (map.height - 1 - UpperLeftY) / sourceHeight * canvas.height || objectSet[bulletSet[i]].y < (0 - UpperLeftY) / sourceHeight * canvas.height) {
+            if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= 2 * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= 2 * canvas.height) {
                 objectSet[bulletSet[i]].destroy = 1;
             }
             else {
@@ -558,53 +522,48 @@ window.onload = function () {
     }
 
     function drawBackGround() {
-        var destWidth = canvas.width;
-        var destHeight = canvas.height;
-        var destX = canvas.width / 2;
-        var destY = canvas.height / 2;
-        comrotateImage(0, map, UpperLeftX, UpperLeftY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-
+        var xRatio = 2*canvas.width/map.width;
+        var yRatio = 2*canvas.height/map.height;
+        context.drawImage(map, UpperLeftX/xRatio, UpperLeftY/yRatio, .5*map.width, .5*map.height, 0, 0, canvas.width, canvas.height);
     }
 
     function react() {
-	if (shootBullet==1){
-	    launchBullet();
-	}
-	if (shootDrone==1){
-	    launchDrone();
-	}
-	if (Wdown){
-	    for (var i = 0; i < moveSet.length; i++) {
-		for (var i = 0; i < moveSet.length; i++) {
-		    objectSet[moveSet[i]].speed += acceleration;
-		    if (objectSet[moveSet[i]].speed > speedLimit) {
-			objectSet[moveSet[i]].speed = speedLimit;
-		    }
-		    objectSet[moveSet[i]].rotToDxDy();
-		}
-	    }
-	}
-	if (Sdown){
-	    for (var i = 0; i < moveSet.length; i++) {
-		objectSet[moveSet[i]].speed -= acceleration;
-		if (objectSet[moveSet[i]].speed < -speedLimit) {
-		    objectSet[moveSet[i]].speed = -speedLimit;
-                    }
-		objectSet[moveSet[i]].rotToDxDy();
-	    }
-	}
-	if (Adown){
-	    for (var i = 0; i < moveSet.length; i++) {
-		objectSet[moveSet[i]].rot += rotationSpeed;
-		objectSet[moveSet[i]].rotToDxDy();
-	    }
-	}
-	if (Ddown){
-	    for (var i = 0; i < moveSet.length; i++) {
-		objectSet[moveSet[i]].rot -= rotationSpeed;
-		objectSet[moveSet[i]].rotToDxDy();
-	    }
-	}
+        if (shootBullet == 1) {
+            launchBullet();
+        }
+        if (shootDrone == 1) {
+            launchDrone();
+        }
+        if (Wdown) {
+            for (var i = 0; i < moveSet.length; i++) {
+                objectSet[moveSet[i]].speed += acceleration;
+                if (objectSet[moveSet[i]].speed > speedLimit) {
+                    objectSet[moveSet[i]].speed = speedLimit;
+                }
+                objectSet[moveSet[i]].rotToDxDy();
+            }
+        }
+        if (Sdown) {
+            for (var i = 0; i < moveSet.length; i++) {
+                objectSet[moveSet[i]].speed -= 2 * acceleration;
+                if (objectSet[moveSet[i]].speed < 0) {
+                    objectSet[moveSet[i]].speed = 0;
+                }
+                objectSet[moveSet[i]].rotToDxDy();
+            }
+        }
+        if (Adown) {
+            for (var i = 0; i < moveSet.length; i++) {
+                objectSet[moveSet[i]].rot += rotationSpeed;
+                objectSet[moveSet[i]].rotToDxDy();
+            }
+        }
+        if (Ddown) {
+            for (var i = 0; i < moveSet.length; i++) {
+                objectSet[moveSet[i]].rot -= rotationSpeed;
+                objectSet[moveSet[i]].rotToDxDy();
+            }
+        }
     }
 
 
@@ -613,7 +572,7 @@ window.onload = function () {
         if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1) {
             drawBackGround();
             adjustDrones();
-	    react();
+            react();
             moves();
             hitTest();
             destroy();
@@ -630,53 +589,53 @@ window.onload = function () {
         reqFrame(drawLoop);
     }
 
-    function KeyDown(evt){
-	switch (evt.keyCode) {
-	case 188:
-	shootBullet=1;
-	break;
-	case 190:
-	shootDrone=1;
-	break;
-	case 87:
-	Wdown=1;
-	break;
-	case 83:
-	Sdown=1;
-	break;
-	case 65:
-	Adown=1;
-	break;
-	case 68:
-	Ddown=1;
-	break;	
-	}
+    function KeyDown(evt) {
+        switch (evt.keyCode) {
+            case 188:
+                shootBullet = 1;
+                break;
+            case 190:
+                shootDrone = 1;
+                break;
+            case 87:
+                Wdown = 1;
+                break;
+            case 83:
+                Sdown = 1;
+                break;
+            case 65:
+                Adown = 1;
+                break;
+            case 68:
+                Ddown = 1;
+                break;
+        }
     }
 
-    function KeyUp(evt){
-	switch (evt.keyCode) {
-	case 188:
-	shootBullet=0;
-	break;
-	case 190:
-	shootDrone=0;
-	break;
-	case 87:
-	Wdown=0;
-	break;
-	case 83:
-	Sdown=0;
-	break;
-	case 65:
-	Adown=0;
-	break;
-	case 68:
-	Ddown=0;
-	break;	
-	}
-    }    
+    function KeyUp(evt) {
+        switch (evt.keyCode) {
+            case 188:
+                shootBullet = 0;
+                break;
+            case 190:
+                shootDrone = 0;
+                break;
+            case 87:
+                Wdown = 0;
+                break;
+            case 83:
+                Sdown = 0;
+                break;
+            case 65:
+                Adown = 0;
+                break;
+            case 68:
+                Ddown = 0;
+                break;
+        }
+    }
 
     window.addEventListener("keyup", KeyUp, false);
-    window.addEventListener("keydown", KeyDown, false);    
+    window.addEventListener("keydown", KeyDown, false);
     drawLoop();
 }
