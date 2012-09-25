@@ -163,14 +163,17 @@ window.onload = function () {
         Empty.prototype = object; // don't ask why not ball.prototype=aBall;
         obj = new Empty();
         obj.img = bullet;
-        obj.rot = shooter.rot;
         obj.x = shooter.x;
         obj.y = shooter.y;
         obj.width = 15;
         obj.height = 5;
-        obj.speed = shooter.speed + 15;
-        obj.rotToDxDy();
-        obj.destroy = 0;
+        obj.speed = 15;
+        obj.dx = shootX + UpperLeftX - shooter.x;
+        obj.dy = shootY + UpperLeftY - shooter.y;
+        obj.normalize();
+        obj.dx += shooter.dx;
+        obj.dy += shooter.dy;
+        obj.rot = -Math.atan2(obj.dy, obj.dx);
         return obj;
     }
 
@@ -332,7 +335,7 @@ window.onload = function () {
     function launchDrone() {
         for (var i = 0; i < otherSet.length; i++) {
             var time = (new Date()).getMilliseconds();
-            if ((time + 1000 - objectSet[otherSet[i]].lastshoot) % 1000 < 250*(3.5-difficulty)) {
+            if ((time + 1000 - objectSet[otherSet[i]].lastshoot) % 1000 < 250 * (3.5 - difficulty)) {
                 continue;
             }
             objectSet[otherSet[i]].lastshoot = time;
@@ -358,7 +361,7 @@ window.onload = function () {
     function launchShield() {
         for (var i = 0; i < moveSet.length; i++) {
             var time = (new Date()).getSeconds();
-            if ((time + 60 - objectSet[moveSet[i]].lastshield) % 60 < (6+difficulty)) {
+            if ((time + 60 - objectSet[moveSet[i]].lastshield) % 60 < (6 + difficulty)) {
                 continue;
             }
             objectSet[moveSet[i]].lastshield = time;
@@ -368,7 +371,7 @@ window.onload = function () {
 
     var ali = .9;
     function adjustDrones() {
-	var attraction = (difficulty+1)*5;
+        var attraction = (difficulty + 1) * 5;
         var newDX = new Array(droneSet.length);
         var newDY = new Array(droneSet.length);
         for (var i = droneSet.length - 1; i >= 0; i--) {
@@ -476,7 +479,7 @@ window.onload = function () {
             for (var j = 0; j < moveSet.length; j++) {
                 if (BoundCheck(objectSet[droneSet[i]], objectSet[moveSet[j]])) {
                     objectSet[droneSet[i]].destroy = 1;
-                    if (objectSet[moveSet[j]].shield == 0 && otherSet.length!=0) {
+                    if (objectSet[moveSet[j]].shield == 0 && otherSet.length != 0) {
                         objectSet[moveSet[j]].life -= 5;
                         if (objectSet[moveSet[j]].life <= 0) {
                             objectSet[moveSet[j]].destroy = 1;
@@ -670,47 +673,47 @@ window.onload = function () {
     }
 
     function starting() {
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	context.beginPath();
-	if (state==0){
-	    context.fillStyle='red';
-	}
-	else{
-	    context.fillStyle='yellow';
-	}	    
-	context.rect(canvas.width / 2 -150, canvas.height / 2 - 30,300,60);
-	context.stroke();
-	context.fill();
-	context.beginPath();
-	if (state==1){
-	    context.fillStyle='red';
-	}
-	else{
-	    context.fillStyle='yellow';
-	}
-	context.rect(canvas.width / 2 -150, canvas.height / 2 + 70,300,60);
-	context.stroke();
-	context.fill();
-	context.beginPath();
-	if (state==2){
-	    context.fillStyle='red';
-	}
-	else{
-	    context.fillStyle='yellow';
-	}
-	context.rect(canvas.width / 2 -150, canvas.height / 2 + 170,300,60);
-	context.stroke();
-	context.fill();	
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.beginPath();
+        if (state == 0) {
+            context.fillStyle = 'red';
+        }
+        else {
+            context.fillStyle = 'yellow';
+        }
+        context.rect(canvas.width / 2 - 150, canvas.height / 2 - 30, 300, 60);
+        context.stroke();
+        context.fill();
+        context.beginPath();
+        if (state == 1) {
+            context.fillStyle = 'red';
+        }
+        else {
+            context.fillStyle = 'yellow';
+        }
+        context.rect(canvas.width / 2 - 150, canvas.height / 2 + 70, 300, 60);
+        context.stroke();
+        context.fill();
+        context.beginPath();
+        if (state == 2) {
+            context.fillStyle = 'red';
+        }
+        else {
+            context.fillStyle = 'yellow';
+        }
+        context.rect(canvas.width / 2 - 150, canvas.height / 2 + 170, 300, 60);
+        context.stroke();
+        context.fill();
         context.font = '80pt Calibri';
         context.textAlign = 'center';
         context.fillStyle = 'black';
-	context.textBaseline = 'middle';
+        context.textBaseline = 'middle';
         context.fillText('Protect Our Planet', canvas.width / 2, canvas.height / 2 - 100);
         context.font = '40pt Calibri';
-        context.fillText('Instruction', canvas.width / 2, canvas.height / 2 );
-	context.font = '40pt Calibri';
+        context.fillText('Instruction', canvas.width / 2, canvas.height / 2);
+        context.font = '40pt Calibri';
         context.fillText('Difficulty', canvas.width / 2, canvas.height / 2 + 100);
-	context.font = '40pt Calibri';
+        context.font = '40pt Calibri';
         context.fillText('Start', canvas.width / 2, canvas.height / 2 + 200);
 
     }
@@ -735,7 +738,7 @@ window.onload = function () {
                 objectSet[moveSet[i]].shield = 0;
             }
         }
-	launchDrone();
+        launchDrone();
     }
 
 
@@ -788,9 +791,9 @@ window.onload = function () {
     }
 
     function KeyDown(evt) {
-	if (evt.keyCode!=116){
-	    evt.preventDefault();
-	}
+        if (evt.keyCode != 116) {
+            evt.preventDefault();
+        }
         switch (evt.keyCode) {
             case 188:
                 shootBullet = 1;
@@ -814,124 +817,131 @@ window.onload = function () {
                 openShield = 1;
                 break;
             case 38:
-	    if (start==0){
-		state=(state-1+3)%3;
-		starting();
-	    }
-	    else{
-		if (start==2){
-		    difficulty=(difficulty-1+4)%4;
-		    setDifficulty();
-		}
-	    }
-		    
-	    break;
-	case 40:
-	    if (start==0){
-		state=(state+1+3)%3;
-		starting();
-	    }
-	    else{
-		if (start==2){
-		    difficulty=(difficulty+1+4)%4;
-		    setDifficulty();
-		}
-	    }	    
-	    break;
+                if (start == 0) {
+                    state = (state - 1 + 3) % 3;
+                    starting();
+                }
+                else {
+                    if (start == 2) {
+                        difficulty = (difficulty - 1 + 4) % 4;
+                        setDifficulty();
+                    }
+                }
+
+                break;
+            case 40:
+                if (start == 0) {
+                    state = (state + 1 + 3) % 3;
+                    starting();
+                }
+                else {
+                    if (start == 2) {
+                        difficulty = (difficulty + 1 + 4) % 4;
+                        setDifficulty();
+                    }
+                }
+                break;
 
             case 13:
-	    if (start == 0){
-		switch (state){
-		case 0:
-		    start=1;
-		    instruction(); 
-		    break;
-		case 1:
-		    start=2;
-		    setDifficulty();
-		    break;
-		case 2:
-		    start = 3;
-		    curLevel = 1;
-		    init();
-		    drawLoop();
-		    break;
-		}
-	    }
-	    else{
-		if (start==1  || start ==2 || start==4){
-		start=0;
-		starting();
-		}
-	    }
-	    break;
+                if (start == 0) {
+                    switch (state) {
+                        case 0:
+                            start = 1;
+                            instruction();
+                            break;
+                        case 1:
+                            start = 2;
+                            setDifficulty();
+                            break;
+                        case 2:
+                            start = 3;
+                            curLevel = 1;
+                            init();
+                            drawLoop();
+                            break;
+                    }
+                }
+                else {
+                    if (start == 1 || start == 2 || start == 4) {
+                        start = 0;
+                        starting();
+                    }
+                }
+                break;
         }
     }
 
-    function instruction(){
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	context.fillText('No intruction, press Enter to return', canvas.width / 2, canvas.height / 2 );
+    function instruction() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillText('No intruction, press Enter to return', canvas.width / 2, canvas.height / 2);
     }
 
-    function setDifficulty(){
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	context.beginPath();
-	if (difficulty==0){
-	    context.fillStyle='red';
-	}
-	else{
-	    context.fillStyle='yellow';
-	}	    
-	context.rect(canvas.width / 2 -150, canvas.height / 2 - 130,300,60);
-	context.stroke();
-	context.fill();
+    function setDifficulty() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.beginPath();
+        if (difficulty == 0) {
+            context.fillStyle = 'red';
+        }
+        else {
+            context.fillStyle = 'yellow';
+        }
+        context.rect(canvas.width / 2 - 150, canvas.height / 2 - 130, 300, 60);
+        context.stroke();
+        context.fill();
 
 
-	context.beginPath();
-	if (difficulty==1){
-	    context.fillStyle='red';
-	}
-	else{
-	    context.fillStyle='yellow';
-	}	    
-	context.rect(canvas.width / 2 -150, canvas.height / 2 - 30,300,60);
-	context.stroke();
-	context.fill();
-	context.beginPath();
-	if (difficulty==2){
-	    context.fillStyle='red';
-	}
-	else{
-	    context.fillStyle='yellow';
-	}
-	context.rect(canvas.width / 2 -150, canvas.height / 2 + 70,300,60);
-	context.stroke();
-	context.fill();
-	context.beginPath();
-	if (difficulty==3){
-	    context.fillStyle='red';
-	}
-	else{
-	    context.fillStyle='yellow';
-	}
-	context.rect(canvas.width / 2 -150, canvas.height / 2 + 170,300,60);
-	context.stroke();
-	context.fill();	
+        context.beginPath();
+        if (difficulty == 1) {
+            context.fillStyle = 'red';
+        }
+        else {
+            context.fillStyle = 'yellow';
+        }
+        context.rect(canvas.width / 2 - 150, canvas.height / 2 - 30, 300, 60);
+        context.stroke();
+        context.fill();
+        context.beginPath();
+        if (difficulty == 2) {
+            context.fillStyle = 'red';
+        }
+        else {
+            context.fillStyle = 'yellow';
+        }
+        context.rect(canvas.width / 2 - 150, canvas.height / 2 + 70, 300, 60);
+        context.stroke();
+        context.fill();
+        context.beginPath();
+        if (difficulty == 3) {
+            context.fillStyle = 'red';
+        }
+        else {
+            context.fillStyle = 'yellow';
+        }
+        context.rect(canvas.width / 2 - 150, canvas.height / 2 + 170, 300, 60);
+        context.stroke();
+        context.fill();
         context.font = '40pt Calibri';
         context.textAlign = 'center';
         context.fillStyle = 'black';
-	context.textBaseline = 'middle';
+        context.textBaseline = 'middle';
         context.fillText('Easy', canvas.width / 2, canvas.height / 2 - 100);
         context.font = '40pt Calibri';
-        context.fillText('Normal', canvas.width / 2, canvas.height / 2 );
-	context.font = '40pt Calibri';
+        context.fillText('Normal', canvas.width / 2, canvas.height / 2);
+        context.font = '40pt Calibri';
         context.fillText('Hard', canvas.width / 2, canvas.height / 2 + 100);
-	context.font = '40pt Calibri';
+        context.font = '40pt Calibri';
         context.fillText('Very Hard', canvas.width / 2, canvas.height / 2 + 200);
     }
-	
-	
-	
+
+    var shootX = 0;
+    var shootY = 0;
+
+    function doClick(evt) {
+        shootX = evt.pageX - canvas.offsetLeft;
+        shootY = evt.pageY - canvas.offsetTop;
+        launchBullet();
+    }
+
 
     function KeyUp(evt) {
         switch (evt.keyCode) {
@@ -962,4 +972,5 @@ window.onload = function () {
     starting();
     window.addEventListener("keyup", KeyUp, false);
     window.addEventListener("keydown", KeyDown, false);
+    canvas.addEventListener("click", doClick, false);
 }
