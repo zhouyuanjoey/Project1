@@ -10,7 +10,7 @@ window.onload = function () {
 
     var canvas = document.getElementById('myCanvas');
     var context = canvas.getContext('2d');
-    var speedLimit = 10;
+    var speedLimit = 6;
     var acceleration = .1;
     var rotationSpeed = .1;
 
@@ -31,16 +31,28 @@ window.onload = function () {
         "lastshield": 0,
         "shield": 0,
         draw: function () {
-            if (this.shield == 1) {
-                context.fillStyle = 'blue';
-                context.strokeStyle = 'white';
-                context.lineWidth = 2;
-                context.beginPath();
-                context.arc(this.x - UpperLeftX, this.y - UpperLeftY, Math.max(this.width / 2, this.height / 2), 0, 2 * Math.PI, false);
-                context.stroke();
-                context.fill();
-            }
-            simrotateImage(this.rot, this.img, this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+	    if (timer2 != -1){
+		
+		if (this.img.length >=3){
+		    simrotateImage(this.rot, this.img[2], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+		}
+		else{
+		    simrotateImage(this.rot, this.img[0], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+		}
+	    }
+	    else{		
+		if (this.shield == 1) {
+		    if (this.img.length >=2){		    
+			simrotateImage(this.rot, this.img[1], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+		    }
+		    else{
+			simrotateImage(this.rot, this.img[0], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+		    }			
+		}
+		else{
+		    simrotateImage(this.rot, this.img[0], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+		}
+	    }
             if (this.maxlife != 0) {
                 var transX = this.x - UpperLeftX;
                 var transY = this.y - UpperLeftY;
@@ -135,7 +147,7 @@ window.onload = function () {
         Empty = function () { };
         Empty.prototype = object; // don't ask why not ball.prototype=aBall;
         obj = new Empty();
-        obj.img = img;
+        obj.img=img;
         obj.rot = rot;
         obj.x = x;
         obj.y = y;
@@ -162,17 +174,16 @@ window.onload = function () {
         Empty = function () { };
         Empty.prototype = object; // don't ask why not ball.prototype=aBall;
         obj = new Empty();
-        obj.img = bullet;
+        obj.img = [];
+	obj.img.push(bullet);
         obj.x = shooter.x;
         obj.y = shooter.y;
         obj.width = 15;
         obj.height = 5;
         obj.speed = 15;
-        obj.dx = shootX + UpperLeftX - shooter.x;
-        obj.dy = shootY + UpperLeftY - shooter.y;
+        obj.dx = shootX  - shooter.x;
+        obj.dy = shootY  - shooter.y;
         obj.normalize();
-        obj.dx += shooter.dx;
-        obj.dy += shooter.dy;
         obj.rot = -Math.atan2(obj.dy, obj.dx);
         return obj;
     }
@@ -181,13 +192,14 @@ window.onload = function () {
         Empty = function () { };
         Empty.prototype = object; // don't ask why not ball.prototype=aBall;
         obj = new Empty();
-        obj.img = plane;
+        obj.img = [];
+	obj.img.push(plane);
         obj.rot = rot;
         obj.x = launcher.x;
         obj.y = launcher.y;
         obj.width = 30;
         obj.height = 10;
-        obj.speed = 5;
+        obj.speed = 3;
         obj.rotToDxDy();
         obj.destroy = 0;
         return obj;
@@ -198,25 +210,30 @@ window.onload = function () {
     var bulletSet;
     var droneSet;
     var otherSet;
-    var mapload;
-    var castleload;
-    var planeload;
-    var bulletload;
-    var shootBullet;
+    var mapload=0;
+    var castleload=0;
+    var planeload=0;
+    var bulletload=0;
+    var shieldplaneload=0;
+    var blackplaneload=0;
     var shootDrone;
     var Wdown;
     var Sdown;
     var Adown;
     var Ddown;
     var openShield;
+    var explosion;
     var UpperLeftX;
     var UpperLeftY;
     var timer;
+    var timer2=-1;
     var curLevel;
     var start = 0;
     var difficulty = 0;
     var state = 2;
     var maxLevel = 3;
+    var exploded;
+    var lifeleft;
 
     var map = new Image();
     map.src = 'map.png';
@@ -236,6 +253,18 @@ window.onload = function () {
     plane.src = 'plane.png';
     plane.onload = function () {
         planeload = 1;
+    }
+
+    var shieldplane = new Image();
+    shieldplane.src = 'plane_shields.png';
+    shieldplane.onload = function () {
+        shieldplaneload = 1;
+    }
+
+    var blackplane = new Image();
+    blackplane.src = 'blackplane.png';
+    blackplane.onload = function () {
+        blackplaneload = 1;
     }
 
 
@@ -261,17 +290,25 @@ window.onload = function () {
         UpperLeftX = 0;
         UpperLeftY = canvas.height / 2;
         timer = -1;
+	exploded = 0;
+	lifeleft = 3 - difficulty;
         var destWidth = 100;
         var destHeight = 100;
         var destX = 1.8 * canvas.width;
         var destY = canvas.height;
-        objectSet.push(makeObject(castle, 0, destX, destY, destWidth, destHeight, 0, 2000));
+	var set=[];
+	set.push(castle);
+        objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 0, 2000));
         otherSet.push(0);
         destWidth = 111;
         destHeight = 70;
         destX = 50 + UpperLeftX;
         destY = canvas.height / 2 + UpperLeftY;
-        objectSet.push(makeObject(plane, 0, destX, destY, destWidth, destHeight, 0, 100));
+	set=[];
+	set.push(plane);
+	set.push(shieldplane);
+	set.push(blackplane);
+        objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 0, 100));
         moveSet.push(1);
     }
 
@@ -334,8 +371,8 @@ window.onload = function () {
 
     function launchDrone() {
         for (var i = 0; i < otherSet.length; i++) {
-            var time = (new Date()).getMilliseconds();
-            if ((time + 1000 - objectSet[otherSet[i]].lastshoot) % 1000 < 250 * (3.5 - difficulty)) {
+            var time = (new Date()).getTime();
+            if (objectSet[otherSet[i]].lastshoot!=-1 && time - objectSet[otherSet[i]].lastshoot < 250 * (3.5 - difficulty)) {
                 continue;
             }
             objectSet[otherSet[i]].lastshoot = time;
@@ -347,12 +384,6 @@ window.onload = function () {
 
     function launchBullet() {
         for (var i = 0; i < moveSet.length; i++) {
-            var time = (new Date()).getMilliseconds();
-            if ((time + 1000 - objectSet[moveSet[i]].lastshoot) % 1000 < 250) {
-                continue;
-            }
-            objectSet[moveSet[i]].lastshoot = time;
-
             bulletSet.push(objectSet.length);
             objectSet.push(makeBullet(objectSet[moveSet[i]]));
         }
@@ -360,14 +391,24 @@ window.onload = function () {
 
     function launchShield() {
         for (var i = 0; i < moveSet.length; i++) {
-            var time = (new Date()).getSeconds();
-            if ((time + 60 - objectSet[moveSet[i]].lastshield) % 60 < (6 + difficulty)) {
-                continue;
-            }
+            var time = (new Date()).getTime();
+	    if (objectSet[moveSet[i]].lastshield !=-1 && time - objectSet[moveSet[i]].lastshield < (6 + difficulty)*1000) {
+		continue;
+	    }
             objectSet[moveSet[i]].lastshield = time;
             objectSet[moveSet[i]].shield = 1;
         }
     }
+
+    function Explosion() {
+	if (exploded ==0){
+	    for (var i = 0; i < droneSet.length; i++) {
+		objectSet[droneSet[i]].destroy = 1;
+		exploded=1;
+	    }
+	}
+    }
+	
 
     var ali = .9;
     function adjustDrones() {
@@ -479,12 +520,26 @@ window.onload = function () {
             for (var j = 0; j < moveSet.length; j++) {
                 if (BoundCheck(objectSet[droneSet[i]], objectSet[moveSet[j]])) {
                     objectSet[droneSet[i]].destroy = 1;
-                    if (objectSet[moveSet[j]].shield == 0 && otherSet.length != 0) {
-                        objectSet[moveSet[j]].life -= 5;
-                        if (objectSet[moveSet[j]].life <= 0) {
-                            objectSet[moveSet[j]].destroy = 1;
+		    if (timer2 == -1){
+			if (objectSet[moveSet[j]].shield == 0 && otherSet.length != 0) {
+			    objectSet[moveSet[j]].life -= 5;
+			    if (objectSet[moveSet[j]].life <= 0) {
+				if (lifeleft == 0){
+				    objectSet[moveSet[j]].destroy = 1;
+				}
+				else{
+				    lifeleft --;
+				    objectSet[moveSet[j]].life = objectSet[moveSet[j]].maxlife;				    
+				    timer2=(new Date()).getTime();
+				}
+			    }
                         }
                     }
+		    else{
+			if ((new Date()).getTime()-timer2 >= 3000){
+			    timer2 = -1;
+			}
+		    }
                     break;
                 }
             }
@@ -632,6 +687,10 @@ window.onload = function () {
             launchShield();
         }
 
+	if (explosion == 1){
+	    Explosion();
+	}
+
         if (Wdown) {
             for (var i = 0; i < moveSet.length; i++) {
                 objectSet[moveSet[i]].speed += acceleration;
@@ -664,12 +723,20 @@ window.onload = function () {
         }
     }
 
-    function drawLevel() {
+    function drawInformation() {
         context.font = '20pt Calibri';
         context.textAlign = 'center';
         context.textBasline = 'middle';
         context.fillStyle = 'white';
         context.fillText('Level       ' + curLevel, canvas.width / 2, 40);
+	context.font = '15pt Calibri';
+	context.fillStyle = 'yellow';		
+	context.fillText('Explosion:' + (exploded ? 'used' : 'not used'), 120, 40); 
+	var left=objectSet[moveSet[0]].lastshield==-1?0:Math.max(Math.ceil((6+difficulty)-((new Date()).getTime()-objectSet[moveSet[0]].lastshield)/1000),0);
+	context.fillText('Next Shield in :' +  left.toString(), 120, 70);
+	context.fillText('life remained:' + lifeleft.toString(), 120, 100);
+	
+	
     }
 
     function starting() {
@@ -733,8 +800,8 @@ window.onload = function () {
 
     function effect() {
         for (var i = 0; i < moveSet.length; i++) {
-            var time = (new Date()).getSeconds();
-            if ((time + 60 - objectSet[moveSet[i]].lastshield) % 60 >= 2) {
+            var time = (new Date()).getTime();
+            if ((objectSet[moveSet[i]].lastshield !=-1 && time - objectSet[moveSet[i]].lastshield) >= 2000) {
                 objectSet[moveSet[i]].shield = 0;
             }
         }
@@ -744,9 +811,9 @@ window.onload = function () {
 
 
     function drawLoop() {
-        if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1) {
+        if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1 && shieldplaneload == 1 && blackplaneload == 1) {
             drawBackGround();
-            drawLevel();
+            drawInformation();
             effect();
             adjustDrones();
             react();
@@ -766,10 +833,10 @@ window.onload = function () {
                     context.fillStyle = 'blue';
                     context.fillText('Level   ' + curLevel + '       Complete', canvas.width / 2, canvas.height / 2);
                     if (timer == -1) {
-                        timer = (new Date()).getSeconds();
+                        timer = (new Date()).getTime();
                     }
                     else {
-                        if (((new Date()).getSeconds() + 60 - timer) % 60 >= 3) {
+                        if ((new Date()).getTime() - timer >= 3000) {
                             curLevel++;
                             init();
                         }
@@ -795,9 +862,6 @@ window.onload = function () {
             evt.preventDefault();
         }
         switch (evt.keyCode) {
-            case 188:
-                shootBullet = 1;
-                break;
             case 190:
                 shootDrone = 1;
                 break;
@@ -813,9 +877,12 @@ window.onload = function () {
             case 68:
                 Ddown = 1;
                 break;
-            case 80:
+            case 32:
                 openShield = 1;
                 break;
+	    case 81:
+	        explosion = 1;
+	        break;
             case 38:
                 if (start == 0) {
                     state = (state - 1 + 3) % 3;
@@ -937,17 +1004,16 @@ window.onload = function () {
     var shootY = 0;
 
     function doClick(evt) {
-        shootX = evt.pageX - canvas.offsetLeft;
-        shootY = evt.pageY - canvas.offsetTop;
-        launchBullet();
+	if (start==3){
+	    shootX = evt.pageX - canvas.offsetLeft + UpperLeftX;
+	    shootY = evt.pageY - canvas.offsetTop + UpperLeftY;
+	    launchBullet();
+	}
     }
 
 
     function KeyUp(evt) {
         switch (evt.keyCode) {
-            case 188:
-                shootBullet = 0;
-                break;
             case 190:
                 shootDrone = 0;
                 break;
@@ -963,9 +1029,12 @@ window.onload = function () {
             case 68:
                 Ddown = 0;
                 break;
-            case 80:
+            case 32:
                 openShield = 0;
                 break;
+	    case 81:
+	        explosion = 0;
+	        break;
         }
     }
 
