@@ -31,7 +31,7 @@ window.onload = function () {
         "lastshield": 0,
         "shield": 0,
         draw: function () {
-	    if (timer2 != -1){
+	    if (invulnerable != -1){
 		
 		if (this.img.length >=3){
 		    simrotateImage(this.rot, this.img[2], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
@@ -225,8 +225,8 @@ window.onload = function () {
     var explosion;
     var UpperLeftX;
     var UpperLeftY;
-    var timer;
-    var timer2=-1;
+    var levelup;
+    var invulnerable;
     var curLevel;
     var start = 0;
     var difficulty = 0;
@@ -234,6 +234,9 @@ window.onload = function () {
     var maxLevel = 3;
     var exploded;
     var lifeleft;
+    var SlowDownTimer;
+    var SlowCenterX;
+    var SlowCenterY;
 
     var map = new Image();
     map.src = 'map.png';
@@ -289,7 +292,11 @@ window.onload = function () {
         openShield = 0;
         UpperLeftX = 0;
         UpperLeftY = canvas.height / 2;
-        timer = -1;
+        levelup = -1;
+	invulnerable = -1;
+	SlowDownTimer = -1;
+	SlowCenterX = -1;
+	SlowCenterY = -1;
 	exploded = 0;
 	lifeleft = 3 - difficulty;
         var destWidth = 100;
@@ -520,7 +527,7 @@ window.onload = function () {
             for (var j = 0; j < moveSet.length; j++) {
                 if (BoundCheck(objectSet[droneSet[i]], objectSet[moveSet[j]])) {
                     objectSet[droneSet[i]].destroy = 1;
-		    if (timer2 == -1){
+		    if (invulnerable == -1){
 			if (objectSet[moveSet[j]].shield == 0 && otherSet.length != 0) {
 			    objectSet[moveSet[j]].life -= 5;
 			    if (objectSet[moveSet[j]].life <= 0) {
@@ -530,14 +537,14 @@ window.onload = function () {
 				else{
 				    lifeleft --;
 				    objectSet[moveSet[j]].life = objectSet[moveSet[j]].maxlife;				    
-				    timer2=(new Date()).getTime();
+				    invulnerable=(new Date()).getTime();
 				}
 			    }
                         }
                     }
 		    else{
-			if ((new Date()).getTime()-timer2 >= 3000){
-			    timer2 = -1;
+			if ((new Date()).getTime()-invulnerable >= 3000){
+			    invulnerable = -1;
 			}
 		    }
                     break;
@@ -694,9 +701,17 @@ window.onload = function () {
         if (Wdown) {
             for (var i = 0; i < moveSet.length; i++) {
                 objectSet[moveSet[i]].speed += acceleration;
-                if (objectSet[moveSet[i]].speed > speedLimit) {
-                    objectSet[moveSet[i]].speed = speedLimit;
-                }
+		if ((objectSet[moveSet[i]].x - SlowCenterX)*(objectSet[moveSet[i]].x - SlowCenterX) + (objectSet[moveSet[i]].y - SlowCenterY)*(objectSet[moveSet[i]].y - SlowCenterY) < 100 * 100){
+		    if (objectSet[moveSet[i]].speed > 0.2 * speedLimit) {
+			objectSet[moveSet[i]].speed = 0.2 * speedLimit;
+		    }
+		}
+		else{
+		    if (objectSet[moveSet[i]].speed > speedLimit) {
+			objectSet[moveSet[i]].speed = speedLimit;
+		    }
+		}		    
+		    
                 objectSet[moveSet[i]].rotToDxDy();
             }
         }
@@ -805,6 +820,31 @@ window.onload = function () {
                 objectSet[moveSet[i]].shield = 0;
             }
         }
+
+	var time = (new Date()).getTime();
+	if (SlowDownTimer == -1){
+	    SlowDownTimer = time;
+	}
+	else{
+	    if (time - SlowDownTimer >= 5000 && time - SlowDownTimer < 10000){
+		if (SlowCenterX == -1 && SlowCenterY == -1){
+		    SlowCenterX = objectSet[moveSet[0]].x;
+		    SlowCenterY = objectSet[moveSet[0]].y;
+		}		    
+		context.beginPath();
+		context.fillStyle = 'green';
+		context.arc(SlowCenterX - UpperLeftX, SlowCenterY - UpperLeftY, 100, 0, 2*Math.PI, false);
+		context.fill();
+	    }
+	    else{
+		if (time - SlowDownTimer >= 10000){
+		    SlowDownTimer = time;
+		    SlowCenterX = -1;
+		    SlowCenterY = -1;
+		}
+	    }
+	}
+
         launchDrone();
     }
 
@@ -832,11 +872,11 @@ window.onload = function () {
                     context.textBasline = 'middle';
                     context.fillStyle = 'blue';
                     context.fillText('Level   ' + curLevel + '       Complete', canvas.width / 2, canvas.height / 2);
-                    if (timer == -1) {
-                        timer = (new Date()).getTime();
+                    if (levelup == -1) {
+                        levelup = (new Date()).getTime();
                     }
                     else {
-                        if ((new Date()).getTime() - timer >= 3000) {
+                        if ((new Date()).getTime() - levelup >= 3000) {
                             curLevel++;
                             init();
                         }
