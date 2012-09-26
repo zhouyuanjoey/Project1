@@ -28,7 +28,7 @@ window.onload = function () {
         "life": 0,
         "destroy": 0,
         "lastshoot": 0,
-        "lastshield": 0,
+        "ShieldTimer": 0,
         "shield": 0,
         draw: function () {
 	    if (invulnerable != -1){
@@ -159,7 +159,7 @@ window.onload = function () {
         obj.life = maxlife;
         obj.destroy = 0;
         obj.lastshoot = -1;
-        obj.lastshield = -1;
+        obj.ShieldTimer = -1;
         obj.shield = 0;
         return obj;
     }
@@ -212,6 +212,7 @@ window.onload = function () {
     var otherSet;
     var mapload=0;
     var castleload=0;
+    var blackcastleload=0;
     var planeload=0;
     var bulletload=0;
     var shieldplaneload=0;
@@ -240,6 +241,11 @@ window.onload = function () {
     var VortexTimer;
     var VortexDragX;
     var VortexDragY;
+    var MeteorTimer;
+    var MeteorX;
+    var MeteorY;
+    var StrongHealth = 1;
+    var ReflectDamage = 1;
 
     var map = new Image();
     map.src = 'map.png';
@@ -253,6 +259,12 @@ window.onload = function () {
     castle.src = 'castle.png';
     castle.onload = function () {
         castleload = 1;
+    }
+
+    var blackcastle = new Image();
+    blackcastle.src = 'blackcastle.png';
+    blackcastle.onload = function () {
+        blackcastleload = 1;
     }
 
     var plane = new Image();
@@ -303,6 +315,9 @@ window.onload = function () {
 	VortexTimer = -1;
 	VortexDragX = -1;
 	VortexDragY = -1;
+	MeteorTimer = -1;
+	MeteorX = [];
+	MeteorY = [];
 	exploded = 0;
 	lifeleft = 3 - difficulty;
         var destWidth = 100;
@@ -311,6 +326,7 @@ window.onload = function () {
         var destY = canvas.height;
 	var set=[];
 	set.push(castle);
+	set.push(blackcastle);
         objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 0, 2000));
         otherSet.push(0);
         destWidth = 111;
@@ -405,10 +421,10 @@ window.onload = function () {
     function launchShield() {
         for (var i = 0; i < moveSet.length; i++) {
             var time = (new Date()).getTime();
-	    if (objectSet[moveSet[i]].lastshield !=-1 && time - objectSet[moveSet[i]].lastshield < (6 + difficulty)*1000) {
+	    if (objectSet[moveSet[i]].ShieldTimer !=-1 && time - objectSet[moveSet[i]].ShieldTimer < (6 + difficulty)*1000) {
 		continue;
 	    }
-            objectSet[moveSet[i]].lastshield = time;
+            objectSet[moveSet[i]].ShieldTimer = time;
             objectSet[moveSet[i]].shield = 1;
         }
     }
@@ -504,6 +520,33 @@ window.onload = function () {
 
 
     function hitTest() {
+	for (var i = 0; i < MeteorX.length; i++){
+	    if (((objectSet[moveSet[0]].x - MeteorX[i]) * (objectSet[moveSet[0]].x - MeteorX[i]) + (objectSet[moveSet[0]].y - MeteorY[i]) * (objectSet[moveSet[0]].y - MeteorY[i])) < 900 ){
+		if (invulnerable == -1){
+		    if (objectSet[moveSet[0]].shield == 0 && otherSet.length != 0) {
+			objectSet[moveSet[0]].life -= 1;
+			if (objectSet[moveSet[0]].life <= 0) {
+			    if (lifeleft == 0){
+				objectSet[moveSet[0]].destroy = 1;
+			    }
+			    else{
+				lifeleft --;
+				objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;				    
+				invulnerable=(new Date()).getTime();
+			    }
+			}
+		    }
+		}
+		else{
+		    if ((new Date()).getTime()-invulnerable >= 3000){
+			invulnerable = -1;
+		    }
+		}
+	    }
+	}
+		
+
+
         for (var i = 0; i < bulletSet.length; i++) {
             if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= map.width / sourceWidth * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= map.height / sourceHeight * canvas.height) {
                 objectSet[bulletSet[i]].destroy = 1;
@@ -511,10 +554,18 @@ window.onload = function () {
 
             for (var j = 0; j < otherSet.length; j++) {
                 if (BoundCheck(objectSet[bulletSet[i]], objectSet[otherSet[j]])) {
-                    objectSet[bulletSet[i]].destroy = 1;
-                    objectSet[otherSet[j]].life -= 100;
+		    if (objectSet[otherSet[0]].shield == 0){
+			objectSet[bulletSet[i]].destroy = 1;
+			objectSet[otherSet[j]].life -= 100;
+		    }
+		    if (ReflectDamage != -1 && objectSet[moveSet[0]].shield == 0){
+			objectSet[moveSet[0]].life -= 1;
+		    }
                     if (objectSet[otherSet[j]].life <= 0) {
                         objectSet[otherSet[j]].destroy = 1;
+                    }
+		    if (objectSet[moveSet[0]].life <= 0) {
+                        objectSet[moveSet[0]].destroy = 1;
                     }
                     break;
                 }
@@ -753,7 +804,7 @@ window.onload = function () {
 	context.font = '15pt Calibri';
 	context.fillStyle = 'yellow';		
 	context.fillText('Explosion:' + (exploded ? 'used' : 'not used'), 120, 40); 
-	var left=objectSet[moveSet[0]].lastshield==-1?0:Math.max(Math.ceil((6+difficulty)-((new Date()).getTime()-objectSet[moveSet[0]].lastshield)/1000),0);
+	var left=objectSet[moveSet[0]].ShieldTimer==-1?0:Math.max(Math.ceil((6+difficulty)-((new Date()).getTime()-objectSet[moveSet[0]].ShieldTimer)/1000),0);
 	context.fillText('Next Shield in :' +  left.toString(), 120, 70);
 	context.fillText('life remained:' + lifeleft.toString(), 120, 100);
 	
@@ -825,7 +876,7 @@ window.onload = function () {
 	}
         for (var i = 0; i < moveSet.length; i++) {
             var time = (new Date()).getTime();
-            if ((objectSet[moveSet[i]].lastshield !=-1 && time - objectSet[moveSet[i]].lastshield) >= 2000) {
+            if ((objectSet[moveSet[i]].ShieldTimer !=-1 && time - objectSet[moveSet[i]].ShieldTimer) >= 2000) {
                 objectSet[moveSet[i]].shield = 0;
             }
         }
@@ -879,8 +930,53 @@ window.onload = function () {
 	    }
 	}
 
-	objectSet[otherSet[0]].life += 0.002 * (objectSet[otherSet[0]].maxlife - objectSet[otherSet[0]].life);
+	if (StrongHealth == 1){
+	    objectSet[otherSet[0]].life += 0.002 * (objectSet[otherSet[0]].maxlife - objectSet[otherSet[0]].life);
+	}
+
+	if (objectSet[otherSet[0]].ShieldTimer == -1){
+	    objectSet[otherSet[0]].ShieldTimer = time;
+	}
+	else{
+	    if (time - objectSet[otherSet[0]].ShieldTimer >= 5000 && time - objectSet[otherSet[0]].ShieldTimer < 6000){
+		objectSet[otherSet[0]].shield = 1;
+	    }
+	    else{
+		if (time - objectSet[otherSet[0]].ShieldTimer >= 6000){
+		    objectSet[otherSet[0]].ShieldTimer = time;
+		    objectSet[otherSet[0]].shield = 0;
+		}
+	    }
+	}
+
+	if (MeteorTimer == -1){
+	    MeteorTimer = time;
+	}
+	else{
+	    if (time - MeteorTimer >= 2000 && time - SlowDownTimer < 4000){
+		while (MeteorX.length <20 && MeteorY.length <20){
+		    MeteorX.push(Math.random()*canvas.width + UpperLeftX);
+		    MeteorY.push(Math.random()*canvas.height + UpperLeftY);
+		}		    
+		context.fillStyle = 'yellow';
+		for (var i=0; i< MeteorX.length; i ++){
+		    context.beginPath();
+		    context.arc(MeteorX[i] - UpperLeftX, MeteorY[i] - UpperLeftY, 30, 0, 2*Math.PI, false);
+		    context.fill();
+		}
+	    }
+	    else{
+		if (time - MeteorTimer >= 4000){
+		    MeteorTimer = time;
+		    MeteorX = [];
+		    MeteorY = [];
+		}
+	    }
+	}
+	    
 		    
+	    
+	    
 		
 	    
 
@@ -892,7 +988,7 @@ window.onload = function () {
 
 
     function drawLoop() {
-        if (mapload == 1 && planeload == 1 && castleload == 1 && bulletload == 1 && shieldplaneload == 1 && blackplaneload == 1) {
+        if (mapload == 1 && planeload == 1 && castleload == 1 && blackcastleload ==1 && bulletload == 1 && shieldplaneload == 1 && blackplaneload == 1) {
             drawBackGround();
             drawInformation();
             effect();
