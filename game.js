@@ -558,15 +558,30 @@ window.onload = function () {
 			objectSet[bulletSet[i]].destroy = 1;
 			objectSet[otherSet[j]].life -= 100;
 		    }
-		    if (ReflectDamage != -1 && objectSet[moveSet[0]].shield == 0){
-			objectSet[moveSet[0]].life -= 1;
+		    if (invulnerable == -1){
+			if (ReflectDamage != -1 && objectSet[moveSet[0]].shield == 0){	
+			    objectSet[moveSet[0]].life -= 1;
+			    if (objectSet[moveSet[0]].life <= 0) {
+				if (lifeleft == 0){
+				    objectSet[moveSet[0]].destroy = 1;
+				}
+				else{
+				    lifeleft --;
+				    objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;				    
+				    invulnerable=(new Date()).getTime();
+				}
+			    }
+			}
 		    }
+		    else{
+			if ((new Date()).getTime()-invulnerable >= 3000){
+			    invulnerable = -1;
+			}
+		    }
+
                     if (objectSet[otherSet[j]].life <= 0) {
                         objectSet[otherSet[j]].destroy = 1;
-                    }
-		    if (objectSet[moveSet[0]].life <= 0) {
-                        objectSet[moveSet[0]].destroy = 1;
-                    }
+                    }		   
                     break;
                 }
             }
@@ -1022,6 +1037,7 @@ window.onload = function () {
             }
             else {
                 if (moveSet.length == 0) {
+		    alert(lifeleft);
                     context.font = '60pt Calibri';
                     context.textAlign = 'center';
                     context.textBasline = 'middle';
