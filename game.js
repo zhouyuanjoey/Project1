@@ -237,6 +237,9 @@ window.onload = function () {
     var SlowDownTimer;
     var SlowCenterX;
     var SlowCenterY;
+    var VortexTimer;
+    var VortexDragX;
+    var VortexDragY;
 
     var map = new Image();
     map.src = 'map.png';
@@ -297,6 +300,9 @@ window.onload = function () {
 	SlowDownTimer = -1;
 	SlowCenterX = -1;
 	SlowCenterY = -1;
+	VortexTimer = -1;
+	VortexDragX = -1;
+	VortexDragY = -1;
 	exploded = 0;
 	lifeleft = 3 - difficulty;
         var destWidth = 100;
@@ -701,7 +707,7 @@ window.onload = function () {
         if (Wdown) {
             for (var i = 0; i < moveSet.length; i++) {
                 objectSet[moveSet[i]].speed += acceleration;
-		if ((objectSet[moveSet[i]].x - SlowCenterX)*(objectSet[moveSet[i]].x - SlowCenterX) + (objectSet[moveSet[i]].y - SlowCenterY)*(objectSet[moveSet[i]].y - SlowCenterY) < 100 * 100){
+		if (SlowCenterX != -1 && SlowCenterY != -1 && (objectSet[moveSet[i]].x - SlowCenterX)*(objectSet[moveSet[i]].x - SlowCenterX) + (objectSet[moveSet[i]].y - SlowCenterY)*(objectSet[moveSet[i]].y - SlowCenterY) < 100 * 100){
 		    if (objectSet[moveSet[i]].speed > 0.2 * speedLimit) {
 			objectSet[moveSet[i]].speed = 0.2 * speedLimit;
 		    }
@@ -814,6 +820,9 @@ window.onload = function () {
     }
 
     function effect() {
+	if (levelup != -1){
+	    return;
+	}
         for (var i = 0; i < moveSet.length; i++) {
             var time = (new Date()).getTime();
             if ((objectSet[moveSet[i]].lastshield !=-1 && time - objectSet[moveSet[i]].lastshield) >= 2000) {
@@ -826,7 +835,7 @@ window.onload = function () {
 	    SlowDownTimer = time;
 	}
 	else{
-	    if (time - SlowDownTimer >= 5000 && time - SlowDownTimer < 10000){
+	    if (time - SlowDownTimer >= 6000 && time - SlowDownTimer < 10000){
 		if (SlowCenterX == -1 && SlowCenterY == -1){
 		    SlowCenterX = objectSet[moveSet[0]].x;
 		    SlowCenterY = objectSet[moveSet[0]].y;
@@ -844,6 +853,38 @@ window.onload = function () {
 		}
 	    }
 	}
+
+	if (VortexTimer == 1){
+	    VortexTimer = time;
+	}
+	else{
+	    if (time - VortexTimer >= 7500 && time - VortexTimer < 8000){
+		if (VortexDragX == -1 && VortexDragY == -1){
+		    VortexDragX = 0.035 * (objectSet[otherSet[0]].x - objectSet[moveSet[0]].x);
+		    VortexDragY = 0.035 * (objectSet[otherSet[0]].y - objectSet[moveSet[0]].y);
+		}
+		objectSet[moveSet[0]].x += VortexDragX;
+		objectSet[moveSet[0]].y += VortexDragY;
+		if (SlowCenterX != -1 && SlowCenterY != -1){
+		    SlowCenterX += VortexDragX;
+		    SlowCenterY += VortexDragY;
+		}
+	    }
+	    else{
+		if (time - VortexTimer >= 8000){
+		    VortexTimer = time;
+		    VortexDragX = -1;
+		    VortexDragY = -1;
+		}
+	    }
+	}
+
+	objectSet[otherSet[0]].life += 0.002 * (objectSet[otherSet[0]].maxlife - objectSet[otherSet[0]].life);
+		    
+		
+	    
+
+
 
         launchDrone();
     }
