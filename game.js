@@ -120,14 +120,6 @@ window.onload = function () {
         //--------------------------------------------------------------------------------------------
     };
 
-    function comrotateImage(rot, img, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight) {//drawing a rotated image on the canvas, complicated version
-        context.translate(destX, destY);
-        context.rotate(-rot);
-        context.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, -destWidth / 2, -destHeight / 2, destWidth, destHeight);
-        context.rotate(rot);
-        context.translate(-destX, -destY);
-    }
-
     function simrotateImage(rot, img, destX, destY, destWidth, destHeight) {//drawing a rototed image on the canvas, simple version
         context.translate(destX, destY);
         context.rotate(-rot);
@@ -231,14 +223,16 @@ window.onload = function () {
     var MeteorY;
 
 
-    var upperLeftX;//canvas coordinates
-    var upperLeftY;
+    var upperLeftX = 0;//canvas coordinates
+    var upperLeftY = canvas.height / 2;
+    var startTimer = -1;
+    var startingMove = 0;
 
     var levelUp;//special circumstances, need to keep in mind in programming
     var invulnerable;
 
     var start = 0; //page index, 0 = starting page, 1 = instruction, 2 = difficulty, 3 = game, 4 = ending page
-    var state = 2; //highlight option in starting page. 0 = instruction, 1 = difficulty, 2 = start
+    var state = 3; //highlight option in starting page. 0 = instruction, 1 = difficulty, 2 = start
 
     var maxLevel = 6; 
     var curLevel; //game parameter
@@ -777,7 +771,7 @@ window.onload = function () {
     }
 
     function drawInformation() {
-        context.font = '20pt Calibri';
+        context.font = '20pt Amplitude';
         context.textAlign = 'center';
         context.textBasline = 'middle';
         context.fillStyle = 'white';
@@ -818,51 +812,80 @@ window.onload = function () {
 
 
     }
+    
+    function drawButton(){
+	context.beginPath();
+	if (state == 0) {
+	    context.fillStyle = 'red';
+	}
+	else {
+	    context.fillStyle = 'yellow';
+	}
+	context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp, buttonWidth, buttonHeight);
+	context.stroke();
+	context.fill();
+	context.beginPath();
+	if (state == 1) {
+	    context.fillStyle = 'red';
+	}
+	else {
+	    context.fillStyle = 'yellow';
+	}
+	context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp + buttonBias, buttonWidth, buttonHeight);
+	context.stroke();
+	context.fill();
+	context.beginPath();
+	if (state == 2) {
+	    context.fillStyle = 'red';
+	}
+	else {
+	    context.fillStyle = 'yellow';
+	}
+	context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp + 2 * buttonBias, buttonWidth, buttonHeight);
+	context.stroke();
+	context.fill();
+	context.textAlign = 'center';
+	context.fillStyle = 'green';
+	context.textBaseline = 'middle';
+	context.font = '40pt Calibri';
+	context.fillText('Instruction', canvas.width / 2, canvas.height / 2);
+	context.font = '40pt Calibri';
+	context.fillText('Difficulty', canvas.width / 2, canvas.height / 2 + 100);
+	context.font = '40pt Calibri';
+	context.fillText('Start', canvas.width / 2, canvas.height / 2 + 200);
+    }
+
 
     function starting() {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.beginPath();
-        if (state == 0) {
-            context.fillStyle = 'red';
-        }
-        else {
-            context.fillStyle = 'yellow';
-        }
-        context.rect(canvas.width / 2 - 150, canvas.height / 2 - 30, 300, 60);
-        context.stroke();
-        context.fill();
-        context.beginPath();
-        if (state == 1) {
-            context.fillStyle = 'red';
-        }
-        else {
-            context.fillStyle = 'yellow';
-        }
-        context.rect(canvas.width / 2 - 150, canvas.height / 2 + 70, 300, 60);
-        context.stroke();
-        context.fill();
-        context.beginPath();
-        if (state == 2) {
-            context.fillStyle = 'red';
-        }
-        else {
-            context.fillStyle = 'yellow';
-        }
-        context.rect(canvas.width / 2 - 150, canvas.height / 2 + 170, 300, 60);
-        context.stroke();
-        context.fill();
-        context.font = '80pt Calibri';
-        context.textAlign = 'center';
-        context.fillStyle = 'black';
-        context.textBaseline = 'middle';
-        context.fillText('Protect Our Planet', canvas.width / 2, canvas.height / 2 - 100);
-        context.font = '40pt Calibri';
-        context.fillText('Instruction', canvas.width / 2, canvas.height / 2);
-        context.font = '40pt Calibri';
-        context.fillText('Difficulty', canvas.width / 2, canvas.height / 2 + 100);
-        context.font = '40pt Calibri';
-        context.fillText('Start', canvas.width / 2, canvas.height / 2 + 200);
-
+	if (start ==0 && mapLoad == 1){
+	    var time = (new Date()).getTime();
+	    if (startTimer != -1 && new Date().getTime() - startTimer < 100){
+	    }
+	    else{
+		startTimer = time;	    
+		var xRatio = canvas.width / map.width * 2;
+		var yRatio = canvas.height / map.height * 2;
+		if (upperLeftX / xRatio + startingMove + map.width / 2 <= map.width ){	    
+		    context.drawImage(map, upperLeftX / xRatio + startingMove, upperLeftY / yRatio, map.width / 2, map.height / 2, 0, 0, canvas.width, canvas.height);
+		}
+		else{
+		    context.drawImage(map, upperLeftX / xRatio + startingMove, upperLeftY / yRatio, map.width - upperLeftX / xRatio - startingMove, map.height / 2, 0, 0, (map.width - upperLeftX / xRatio - startingMove) * xRatio , canvas.height);
+		    context.drawImage(map, 0, upperLeftY / yRatio, -map.width /2 + upperLeftX / xRatio + startingMove, map.height / 2, (map.width - upperLeftX / xRatio - startingMove) * xRatio, 0, (-map.width /2 + upperLeftX / xRatio + startingMove) * xRatio, canvas.height);
+		}
+		context.font = '80pt serif';
+		context.textAlign = 'center';
+		context.fillStyle = 'green';
+		context.textBaseline = 'middle';
+		context.fillText('Protect Our Planet', canvas.width / 2, canvas.height / 2 - 100);
+		drawButton();
+		context.drawImage(plane, 200, 300 , 150 ,100);	
+		context.drawImage(enemy, 900, 250 , 200 ,200);	
+		
+		startingMove += 0.5;
+		startingMove = (startingMove + map.width) % map.width;
+	    }
+	}
+	reqFrame(starting);
     }
 
     function ending() {
@@ -1050,7 +1073,7 @@ window.onload = function () {
                 }
             }
         }
-        reqFrame(drawLoop);
+        reqFrame(drawLoop, 20);
     }
 
     function KeyDown(evt) {
@@ -1079,7 +1102,7 @@ window.onload = function () {
             case 38:
                 if (start == 0) {
                     state = (state - 1 + 3) % 3;
-                    starting();
+                    drawButton();
                 }
                 else {
                     if (start == 2) {
@@ -1092,7 +1115,7 @@ window.onload = function () {
             case 40:
                 if (start == 0) {
                     state = (state + 1 + 3) % 3;
-                    starting();
+                    drawButton();
                 }
                 else {
                     if (start == 2) {
@@ -1196,15 +1219,83 @@ window.onload = function () {
 
     var shootX = 0;
     var shootY = 0;
+    var buttonLeft = 150;
+    var buttonUp = 30;
+    var buttonWidth = 300;
+    var buttonHeight = 60;
+    var buttonBias = 100;
 
-    function doClick(evt) {
-        if (start == 3) {
-            shootX = evt.pageX - canvas.offsetLeft + upperLeftX;
-            shootY = evt.pageY - canvas.offsetTop + upperLeftY;
-            launchBullet();
-        }
+    function doMove(evt) {
+	 switch (start) {
+	 case 0:
+	     shootX = evt.pageX - canvas.offsetLeft;
+	     shootY = evt.pageY - canvas.offsetTop;
+	     if (shootX >= canvas.width / 2 - buttonLeft && shootX <= canvas.width / 2 - buttonLeft + buttonWidth - 1 && shootY >= canvas.height / 2 - buttonUp && shootY <= canvas.height / 2 - buttonUp + buttonHeight - 1){
+		 state = 0;
+		 drawButton();
+	     }
+	     else{
+		 if (shootX >= canvas.width / 2 - buttonLeft && shootX <= canvas.width / 2 - buttonLeft + buttonWidth - 1 && shootY >= canvas.height / 2 - buttonUp + buttonBias && shootY <= canvas.height / 2 - buttonUp + buttonBias + buttonHeight - 1){
+		     state = 1;
+		     drawButton();
+		 }
+		 else{
+		     if (shootX >= canvas.width / 2 - buttonLeft && shootX <= canvas.width / 2 - buttonLeft + buttonWidth - 1 && shootY >= canvas.height / 2 - buttonUp + 2 * buttonBias && shootY <= canvas.height / 2 - buttonUp + 2 * buttonBias + buttonHeight - 1){
+			 state = 2;
+			 drawButton();
+		     }
+		     else{
+			 state = 3;
+			 drawButton();
+		     }
+		 }
+	     }
+	     break;
+	 case 1:
+	     //???
+	     break;
+	 case 2:
+	     break;
+	 case 3:
+	     break;
+	 case 4:
+	     break;
+	 }
     }
 
+    function doClick(evt){
+	switch (start){
+	case 0:
+	    if (state == 0){
+		start = 1;
+		instruction();
+	    }
+	    if (state == 1){
+		 start = 2;
+		 setDifficulty();
+	     }
+	    if (state == 2){
+		 start = 3;
+		 curLevel = 1;
+		 lifeLeft = 3 - difficulty;
+		 init();
+		 drawLoop();
+	     }	     
+	     break;
+	 case 1:
+	     break;
+	 case 2:
+	     break;
+	 case 3:
+	     shootX = evt.pageX - canvas.offsetLeft + upperLeftX;
+	     shootY = evt.pageY - canvas.offsetTop + upperLeftY;
+	     launchBullet();
+	     break;
+	 case 4:
+	     break;
+	 }
+    }
+	
 
     function KeyUp(evt) {
         switch (evt.keyCode) {
@@ -1233,4 +1324,6 @@ window.onload = function () {
     window.addEventListener("keyup", KeyUp, false);
     window.addEventListener("keydown", KeyDown, false);
     canvas.addEventListener("click", doClick, false);
+    canvas.addEventListener("mousemove",doMove,false);
+	
 }
