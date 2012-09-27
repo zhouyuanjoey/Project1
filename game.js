@@ -621,9 +621,10 @@ window.onload = function () {
 		    moveSet[0]--;
 		}
             
-            
-		if (enemySet[0] > bulletSet[i]) {
-		    enemySet[0]--;
+		if (enemySet.length >= 1){
+		    if (enemySet[0] > bulletSet[i]) {
+			enemySet[0]--;
+		    }
 		}
               
                 for (var j = 0; j < droneSet.length; j++) {
@@ -646,9 +647,11 @@ window.onload = function () {
 		    bulletSet[j]--;
 		}
 	    }
-                             
-	    if (enemySet[0] > moveSet[0]){
-		enemySet[0]--;
+             
+	    if (enemySet.length >= 1){
+		if (enemySet[0] > moveSet[0]){
+		    enemySet[0]--;
+		}
 	    }
                
 	    for (var j = 0; j < droneSet.length; j++) {
@@ -659,27 +662,28 @@ window.onload = function () {
 
 	    moveSet.splice(i, 1);
 	}
-        
-       
-     
-	if (objectSet[enemySet[0]].destroy == 1) {
-	    objectSet.splice(enemySet[0], 1);
-	    for (var j = 0; j < bulletSet.length; j++) {
-		if (bulletSet[j] > enemySet[0]) {
-		    bulletSet[j]--;
+          
+ 
+	if (enemySet.length >= 1){
+	    if (objectSet[enemySet[0]].destroy == 1) {
+		objectSet.splice(enemySet[0], 1);
+		for (var j = 0; j < bulletSet.length; j++) {
+		    if (bulletSet[j] > enemySet[0]) {
+			bulletSet[j]--;
+		    }
 		}
-	    }
                
-	    if (moveSet[0] > enemySet[0]) {
-		moveSet[0]--;
-	    }
-                                    
-	    for (var j = 0; j < droneSet.length; j++) {
-		if (droneSet[j] > enemySet[0]) {
-		    droneSet[j]--;
+		if (moveSet[0] > enemySet[0]) {
+		    moveSet[0]--;
 		}
+                                    
+		for (var j = 0; j < droneSet.length; j++) {
+		    if (droneSet[j] > enemySet[0]) {
+			droneSet[j]--;
+		    }
+		}
+		enemySet.splice(i, 1);
 	    }
-	    enemySet.splice(i, 1);
 	}        
      
 
@@ -697,9 +701,10 @@ window.onload = function () {
 		    moveSet[0]--;
 		}
              
-              
-		if (enemySet[0] > droneSet[i]) {
-		    enemySet[0]--;
+		if (enemySet.length >= 1){
+		    if (enemySet[0] > droneSet[i]) {
+			enemySet[0]--;
+		    }
 		}
               
                 for (var j = 0; j < droneSet.length; j++) {
@@ -814,44 +819,37 @@ window.onload = function () {
     }
     
     function drawButton(){
-	context.beginPath();
 	if (state == 0) {
+	    context.beginPath();
 	    context.fillStyle = 'red';
+	    context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp, buttonWidth, buttonHeight);	 
+	    context.fill();
 	}
-	else {
-	    context.fillStyle = 'yellow';
-	}
-	context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp, buttonWidth, buttonHeight);
-	context.stroke();
-	context.fill();
-	context.beginPath();
+
+
+
 	if (state == 1) {
+	    context.beginPath();
 	    context.fillStyle = 'red';
+	    context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp + buttonBias, buttonWidth, buttonHeight);	
+	    context.fill();
 	}
-	else {
-	    context.fillStyle = 'yellow';
-	}
-	context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp + buttonBias, buttonWidth, buttonHeight);
-	context.stroke();
-	context.fill();
-	context.beginPath();
+
+
 	if (state == 2) {
+	    context.beginPath();
 	    context.fillStyle = 'red';
+	    context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp + 2 * buttonBias, buttonWidth, buttonHeight);	  
+	    context.fill();
 	}
-	else {
-	    context.fillStyle = 'yellow';
-	}
-	context.rect(canvas.width / 2 - buttonLeft, canvas.height / 2 - buttonUp + 2 * buttonBias, buttonWidth, buttonHeight);
-	context.stroke();
-	context.fill();
 	context.textAlign = 'center';
-	context.fillStyle = 'green';
+	context.fillStyle = 'white';
 	context.textBaseline = 'middle';
-	context.font = '40pt Calibri';
+	context.font = '40pt Arial';
 	context.fillText('Instruction', canvas.width / 2, canvas.height / 2);
-	context.font = '40pt Calibri';
+	context.font = '40pt Arial';
 	context.fillText('Difficulty', canvas.width / 2, canvas.height / 2 + 100);
-	context.font = '40pt Calibri';
+	context.font = '40pt Arial';
 	context.fillText('Start', canvas.width / 2, canvas.height / 2 + 200);
     }
 
@@ -876,7 +874,7 @@ window.onload = function () {
 		context.textAlign = 'center';
 		context.fillStyle = 'green';
 		context.textBaseline = 'middle';
-		context.fillText('Protect Our Planet', canvas.width / 2, canvas.height / 2 - 100);
+		context.fillText('Protect Our Planet', canvas.width / 2, canvas.height / 2 - 150);
 		drawButton();
 		context.drawImage(plane, 200, 300 , 150 ,100);	
 		context.drawImage(enemy, 900, 250 , 200 ,200);	
@@ -972,10 +970,6 @@ window.onload = function () {
                     }
                     objectSet[moveSet[0]].x += VortexDragX;
                     objectSet[moveSet[0]].y += VortexDragY;
-                    if (slowCenterX != -1 && slowCenterY != -1) {
-                        slowCenterX += VortexDragX;
-                        slowCenterY += VortexDragY;
-                    }
                 }
                 else {
                     if (time - VortexTimer >= 8000) {
