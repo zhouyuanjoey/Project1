@@ -393,8 +393,6 @@ window.onload = function () {
             objectSet[droneSet[i]].moveB();
         }
 
-        objectSet[0].moveNB();
-
         for (var i = 0; i < moveSet.length; i++) {
             if (objectSet[moveSet[i]].x < 0) {
                 objectSet[moveSet[i]].x = 0;
@@ -409,6 +407,13 @@ window.onload = function () {
                 objectSet[moveSet[i]].y = map.height / sourceHeight * canvas.height - 1;
             }
         }
+
+        for (var i = 0; i < otherSet.length; i++) {
+            objectSet[otherSet[0]].dx = objectSet[1].x - objectSet[otherSet[0]].x;
+            objectSet[otherSet[0]].dy = objectSet[1].y - objectSet[otherSet[0]].y;
+            objectSet[otherSet[0]].normalize();
+            objectSet[otherSet[0]].moveNB();
+        }
     }
 
     function launchDrone() {
@@ -420,7 +425,7 @@ window.onload = function () {
             objectSet[otherSet[i]].lastshoot = time;
 
             droneSet.push(objectSet.length);
-            objectSet.push(makeDrone(objectSet[otherSet[i]], Math.random()*Math.PI*2));
+            objectSet.push(makeDrone(objectSet[otherSet[i]], Math.random() * Math.PI * 2));
         }
     }
 
@@ -487,10 +492,6 @@ window.onload = function () {
 
             objectSet[droneSet[i]].rot = -Math.atan2(objectSet[droneSet[i]].dy, objectSet[droneSet[i]].dx);
         }
-
-        objectSet[0].dx = objectSet[moveSet[0]].x - objectSet[0].x;
-        objectSet[0].dy = objectSet[moveSet[0]].y - objectSet[0].y;
-        objectSet[0].normalize();
     }
 
     function bounce() {
