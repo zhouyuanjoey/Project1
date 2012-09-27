@@ -27,35 +27,28 @@ window.onload = function () {
         "maxlife": 0,
         "life": 0,
         "destroy": 0,
-        "lastshoot": 0,
-        "ShieldTimer": 0,
+        "shieldTimer": 0,
         "shield": 0,
         draw: function () {
             if (invulnerable != -1) {
-
                 if (this.img.length >= 3) {
-                    simrotateImage(this.rot, this.img[2], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+                    simrotateImage(this.rot, this.img[2], this.x - upperLeftX, this.y - upperLeftY, this.width, this.height);
                 }
                 else {
-                    simrotateImage(this.rot, this.img[0], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+                    simrotateImage(this.rot, this.img[0], this.x - upperLeftX, this.y - upperLeftY, this.width, this.height);
                 }
             }
             else {
                 if (this.shield == 1) {
-                    if (this.img.length >= 2) {
-                        simrotateImage(this.rot, this.img[1], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
-                    }
-                    else {
-                        simrotateImage(this.rot, this.img[0], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
-                    }
+		    simrotateImage(this.rot, this.img[1], this.x - upperLeftX, this.y - upperLeftY, this.width, this.height);
                 }
                 else {
-                    simrotateImage(this.rot, this.img[0], this.x - UpperLeftX, this.y - UpperLeftY, this.width, this.height);
+                    simrotateImage(this.rot, this.img[0], this.x - upperLeftX, this.y - upperLeftY, this.width, this.height);
                 }
             }
             if (this.maxlife != 0) {
-                var transX = this.x - UpperLeftX;
-                var transY = this.y - UpperLeftY;
+                var transX = this.x - upperLeftX;
+                var transY = this.y - upperLeftY;
                 context.fillStyle = 'red';
                 context.beginPath();
                 context.rect(transX - 0.3 * this.width, transY - 0.7 * this.height, 0.6 * this.life / this.maxlife * this.width, 0.1 * this.height);
@@ -79,13 +72,13 @@ window.onload = function () {
         moveB: function () {
             this.x += this.dx;
             this.y += this.dy;
-            if (this.x > map.width / sourceWidth * canvas.width) {
+            if (this.x > 2 * canvas.width) {
                 if (this.dx > 0) {
                     this.dx = -this.dx;
                 }
             }
 
-            if (this.y > map.height / sourceHeight * canvas.height) {
+            if (this.y > 2 * canvas.height) {
                 if (this.dy > 0) {
                     this.dy = -this.dy;
                 }
@@ -158,8 +151,7 @@ window.onload = function () {
         obj.maxlife = maxlife;
         obj.life = maxlife;
         obj.destroy = 0;
-        obj.lastshoot = -1;
-        obj.ShieldTimer = -1;
+        obj.shieldTimer = -1;
         obj.shield = 0;
         return obj;
     }
@@ -205,91 +197,97 @@ window.onload = function () {
         return obj;
     }
 
-    var objectSet;
+    var objectSet;//all sets
     var moveSet;
     var bulletSet;
     var droneSet;
-    var otherSet;
-    var mapload = 0;
-    var castleload = 0;
-    var blackcastleload = 0;
-    var planeload = 0;
-    var bulletload = 0;
-    var shieldplaneload = 0;
-    var blackplaneload = 0;
-    var shootDrone;
+    var enemySet;
+
+    var mapLoad = 0;// all loading check
+    var enemyLoad = 0;
+    var shieldEnemyLoad = 0;
+    var planeLoad = 0;
+    var bulletLoad = 0;
+    var shieldplaneLoad = 0;
+    var blackplaneLoad = 0;
+
     var Wdown;
     var Sdown;
     var Adown;
     var Ddown;
-    var openShield;
-    var explosion;
-    var UpperLeftX;
-    var UpperLeftY;
-    var levelup;
-    var invulnerable;
-    var curLevel;
-    var start = 0;
-    var difficulty = 0;
-    var state = 2;
-    var maxLevel = 6;
-    var exploded;
-    var lifeleft;
-    var SlowDownTimer;
-    var SlowCenterX;
-    var SlowCenterY;
+    var openShield;//space bar
+    var explosion;//Q button
+    var explosionTimer;
+    var droneTimer;
+
+    var slowDownTimer;//skill timer
+    var slowCenterX;
+    var slowCenterY;
     var VortexTimer;
     var VortexDragX;
     var VortexDragY;
     var MeteorTimer;
     var MeteorX;
     var MeteorY;
+
+
+    var upperLeftX;//canvas coordinates
+    var upperLeftY;
+
+    var levelUp;//special circumstances, need to keep in mind in programming
+    var invulnerable;
+
+    var start = 0; //page index, 0 = starting page, 1 = instruction, 2 = difficulty, 3 = game, 4 = ending page
+    var state = 2; //highlight option in starting page. 0 = instruction, 1 = difficulty, 2 = start
+
+    var maxLevel = 6; 
+    var curLevel; //game parameter
+    var difficulty = 0;
+    var lifeLeft; 
     var skillChosen;
-    var ReflectDamage = 1;
+    
 
     var map = new Image();
     map.src = 'map.png';
     map.onload = function () {
-        mapload = 1;
-    }
-    var sourceWidth = map.width / 2;
-    var sourceHeight = map.height / 2;
-
-    var castle = new Image();
-    castle.src = 'castle.png';
-    castle.onload = function () {
-        castleload = 1;
+        mapLoad = 1;
     }
 
-    var blackcastle = new Image();
-    blackcastle.src = 'blackcastle.png';
-    blackcastle.onload = function () {
-        blackcastleload = 1;
+    var enemy = new Image();
+    enemy.src = 'enemy.png';
+    enemy.onload = function () {
+        enemyLoad = 1;
+    }
+
+    var shieldEnemy = new Image();
+    shieldEnemy.src = 'enemy_shields.png';
+    shieldEnemy.onload = function () {
+        shieldEnemyLoad = 1;
     }
 
     var plane = new Image();
     plane.src = 'plane.png';
     plane.onload = function () {
-        planeload = 1;
+        planeLoad = 1;
     }
 
     var shieldplane = new Image();
     shieldplane.src = 'plane_shields.png';
     shieldplane.onload = function () {
-        shieldplaneload = 1;
+        shieldplaneLoad = 1;
     }
 
     var blackplane = new Image();
-    blackplane.src = 'blackplane.png';
+    blackplane.src = 'plane_invulnerable.png';
     blackplane.onload = function () {
-        blackplaneload = 1;
+        blackplaneLoad = 1;
     }
 
 
     var bullet = new Image();
     bullet.src = 'bullet.png';
     bullet.onload = function () {
-        bulletload = 1;
+        bulletLoad = 1;
     }
 
     function init() {
@@ -297,29 +295,34 @@ window.onload = function () {
         moveSet = [];
         bulletSet = [];
         droneSet = [];
-        otherSet = [];
-        shootBullet = 0;
-        shootDrone = 0;
+        enemySet = [];
+
         Wdown = 0;
         Sdown = 0;
         Adown = 0;
         Ddown = 0;
         openShield = 0;
-        UpperLeftX = 0;
-        UpperLeftY = canvas.height / 2;
-        levelup = -1;
-        invulnerable = -1;
-        SlowDownTimer = -1;
-        SlowCenterX = -1;
-        SlowCenterY = -1;
+	explosion = 0;
+
+	explosionTimer = -1;
+	droneTimer = -1;
+
+	slowDownTimer = -1;
+        slowCenterX = -1;
+        slowCenterY = -1;
         VortexTimer = -1;
         VortexDragX = -1;
         VortexDragY = -1;
         MeteorTimer = -1;
-        MeteorX = [];
+	MeteorX = [];
         MeteorY = [];
-        exploded = 0;
-        lifeleft = 3 - difficulty;
+	
+        upperLeftX = 0;
+        upperLeftY = canvas.height / 2;
+
+        levelUp = -1;
+        invulnerable = -1;
+     
         skillChosen = [];
         var skillLeft = [];
         for (var i = 0; i < 6; i++) {
@@ -336,14 +339,14 @@ window.onload = function () {
         var destX = Math.random() * 2 * canvas.width;
         var destY = Math.random() * 2 * canvas.height;
         var set = [];
-        set.push(castle);
-        set.push(blackcastle);
+        set.push(enemy);
+        set.push(shieldEnemy);
         objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 1, 2000));
-        otherSet.push(0);
+        enemySet.push(0);
         destWidth = 111;
         destHeight = 70;
-        destX = 50 + UpperLeftX;
-        destY = canvas.height / 2 + UpperLeftY;
+        destX = 50 + upperLeftX;
+        destY = canvas.height / 2 + upperLeftY;
         set = [];
         set.push(plane);
         set.push(shieldplane);
@@ -354,15 +357,15 @@ window.onload = function () {
 
     function draws() {
         for (var i = 0; i < objectSet.length; i++) {
-            if (objectSet[i].x > UpperLeftX - 30 && objectSet[i].x < UpperLeftX + 30 + canvas.width && objectSet[i].y > UpperLeftY - 30 && objectSet[i].y < UpperLeftY + 30 + canvas.height) {
+            if (objectSet[i].x > upperLeftX - 30 && objectSet[i].x < upperLeftX + 30 + canvas.width && objectSet[i].y > upperLeftY - 30 && objectSet[i].y < upperLeftY + 30 + canvas.height) {
                 objectSet[i].draw();
             }
         }
     }
 
     function moves() {
-        var preX = UpperLeftX;
-        var preY = UpperLeftY;
+        var preX = upperLeftX;
+        var preY = upperLeftY;
         //---------------------------------------------------------------------------------------------------------------
         //would like to replace your moves with what I wrote below and after this code snippet have code to center the camera on the player's ship
         /*
@@ -372,18 +375,15 @@ window.onload = function () {
         */
         //if we could do this for all non-stationary bojects that would be nice
         //---------------------------------------------------------------------------------------------------------------
-        for (var i = 0; i < moveSet.length; i++) {
-            objectSet[moveSet[i]].moveNB();
-        }
+	objectSet[moveSet[0]].moveNB();
 
+        upperLeftX = objectSet[moveSet[0]].x - canvas.width / 2;
+        upperLeftY = objectSet[moveSet[0]].y - canvas.height / 2;
 
-        UpperLeftX = objectSet[moveSet[0]].x - canvas.width / 2;
-        UpperLeftY = objectSet[moveSet[0]].y - canvas.height / 2;
-
-        if (UpperLeftX < 0) { UpperLeftX = 0 }
-        if (UpperLeftX > (map.width / sourceWidth - 1) * canvas.width) { UpperLeftX = (map.width / sourceWidth - 1) * canvas.width }
-        if (UpperLeftY < 0) { UpperLeftY = 0 }
-        if (UpperLeftY > (map.height / sourceHeight - 1) * canvas.height) { UpperLeftY = (map.height / sourceHeight - 1) * canvas.height }
+        if (upperLeftX < 0) { upperLeftX = 0 }
+        if (upperLeftX > canvas.width) { upperLeftX = canvas.width }
+        if (upperLeftY < 0) { upperLeftY = 0 }
+        if (upperLeftY > canvas.height) { upperLeftY = canvas.height }
 
         for (var i = 0; i < bulletSet.length; i++) {
             objectSet[bulletSet[i]].moveNB();
@@ -393,61 +393,55 @@ window.onload = function () {
             objectSet[droneSet[i]].moveB();
         }
 
-        for (var i = 0; i < moveSet.length; i++) {
-            if (objectSet[moveSet[i]].x < 0) {
-                objectSet[moveSet[i]].x = 0;
-            }
-            if (objectSet[moveSet[i]].x >= map.width / sourceWidth * canvas.width) {
-                objectSet[moveSet[i]].x = map.width / sourceWidth * canvas.width - 1;
-            }
-            if (objectSet[moveSet[i]].y < 0) {
-                objectSet[moveSet[i]].y = 0;
-            }
-            if (objectSet[moveSet[i]].y >= map.height / sourceHeight * canvas.height) {
-                objectSet[moveSet[i]].y = map.height / sourceHeight * canvas.height - 1;
-            }
-        }
+     
+	if (objectSet[moveSet[0]].x < 0) {
+	    objectSet[moveSet[0]].x = 0;
+	}
+	if (objectSet[moveSet[0]].x >= 2 * canvas.width) {
+	    objectSet[moveSet[0]].x = 2 * canvas.width - 1;
+	}
+	if (objectSet[moveSet[0]].y < 0) {
+	    objectSet[moveSet[0]].y = 0;
+	}
+	if (objectSet[moveSet[0]].y >= 2 * canvas.height) {
+	    objectSet[moveSet[0]].y = 2 * canvas.height - 1;
+	}
 
-        for (var i = 0; i < otherSet.length; i++) {
-            objectSet[otherSet[0]].dx = objectSet[1].x - objectSet[otherSet[0]].x;
-            objectSet[otherSet[0]].dy = objectSet[1].y - objectSet[otherSet[0]].y;
-            objectSet[otherSet[0]].normalize();
-            objectSet[otherSet[0]].moveNB();
-        }
+	if (levelUp == -1 ){
+	    objectSet[enemySet[0]].dx = objectSet[1].x - objectSet[enemySet[0]].x;
+	    objectSet[enemySet[0]].dy = objectSet[1].y - objectSet[enemySet[0]].y;
+	    objectSet[enemySet[0]].normalize();
+	    objectSet[enemySet[0]].moveNB();
+	}     
     }
 
-    function launchDrone() {
-        for (var i = 0; i < otherSet.length; i++) {
-            var time = (new Date()).getTime();
-            if (objectSet[otherSet[i]].lastshoot != -1 && time - objectSet[otherSet[i]].lastshoot < 250 * (3.5 - difficulty)) {
-                continue;
-            }
-            objectSet[otherSet[i]].lastshoot = time;
-
-            droneSet.push(objectSet.length);
-            objectSet.push(makeDrone(objectSet[otherSet[i]], Math.random() * Math.PI * 2));
-        }
+    function launchDrone() {     
+	var time = (new Date()).getTime();
+	if (droneTimer != -1 && time - droneTimer < 250 * (3.5 - difficulty)) {
+	    return;
+	}
+	droneTimer = time;
+	droneSet.push(objectSet.length);
+	objectSet.push(makeDrone(objectSet[enemySet[0]], Math.random() * Math.PI * 2));        
     }
 
     function launchBullet() {
-        for (var i = 0; i < moveSet.length; i++) {
-            bulletSet.push(objectSet.length);
-            objectSet.push(makeBullet(objectSet[moveSet[i]]));
-        }
+	bulletSet.push(objectSet.length);
+	objectSet.push(makeBullet(objectSet[moveSet[0]]));
     }
 
     function launchShield() {
-        if (objectSet[moveSet[0]].ShieldTimer == -1) {
-            objectSet[moveSet[0]].ShieldTimer = (new Date()).getTime();
+        if (objectSet[moveSet[0]].shieldTimer == -1) {
+            objectSet[moveSet[0]].shieldTimer = (new Date()).getTime();
             objectSet[moveSet[0]].shield = 1;
         }
     }
 
-    function Explosion() {
-        if (exploded == 0) {
+    function launchExplosion() {
+	if (explosionTimer == -1){
             for (var i = 0; i < droneSet.length; i++) {
                 objectSet[droneSet[i]].destroy = 1;
-                exploded = 1;
+                explosionTimer = (new Date()).getTime();
             }
         }
     }
@@ -534,71 +528,57 @@ window.onload = function () {
 
 
     function hitTest() {
-        for (var i = 0; i < MeteorX.length; i++) {
-            if (((objectSet[moveSet[0]].x - MeteorX[i]) * (objectSet[moveSet[0]].x - MeteorX[i]) + (objectSet[moveSet[0]].y - MeteorY[i]) * (objectSet[moveSet[0]].y - MeteorY[i])) < 900) {
-                if (invulnerable == -1) {
-                    if (objectSet[moveSet[0]].shield == 0 && otherSet.length != 0) {
-                        objectSet[moveSet[0]].life -= 1;
-                        if (objectSet[moveSet[0]].life <= 0) {
-                            if (lifeleft == 0) {
-                                objectSet[moveSet[0]].destroy = 1;
-                            }
-                            else {
-                                lifeleft--;
-                                objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
-                                invulnerable = (new Date()).getTime();
-                            }
-                        }
-                    }
-                }
-                else {
-                    if ((new Date()).getTime() - invulnerable >= 3000) {
-                        invulnerable = -1;
-                    }
-                }
-            }
-        }
 
-
+	if (levelUp == -1 && objectSet[moveSet[0]].shield == 0){
+	    for (var i = 0; i < MeteorX.length; i++) {
+		if (invulnerable == -1){
+		    if (((objectSet[moveSet[0]].x - MeteorX[i]) * (objectSet[moveSet[0]].x - MeteorX[i]) + (objectSet[moveSet[0]].y - MeteorY[i]) * (objectSet[moveSet[0]].y - MeteorY[i])) < 900) {		   
+			objectSet[moveSet[0]].life -= 1;
+			if (objectSet[moveSet[0]].life <= 0) {
+			    if (lifeLeft == 0) {
+				objectSet[moveSet[0]].destroy = 1;
+			    }
+			    else {
+				lifeLeft--;
+				objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
+				invulnerable = (new Date()).getTime();
+			    }
+			}
+		    }
+		}
+	    }
+	}
 
         for (var i = 0; i < bulletSet.length; i++) {
-            if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= map.width / sourceWidth * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= map.height / sourceHeight * canvas.height) {
+            if (objectSet[bulletSet[i]].x < 0 || objectSet[bulletSet[i]].x >= 2 * canvas.width || objectSet[bulletSet[i]].y < 0 || objectSet[bulletSet[i]].y >= 2 * canvas.height) {
                 objectSet[bulletSet[i]].destroy = 1;
             }
+        
+	    if (levelUp == -1 && objectSet[enemySet[0]].shield == 0){
+		if (BoundCheck(objectSet[bulletSet[i]], objectSet[enemySet[0]])) {
+		    objectSet[bulletSet[i]].destroy = 1;
+		    objectSet[enemySet[0]].life -= 100;
+		    if (invulnerable == -1 && skillChosen[5] == 1 && objectSet[moveSet[0]].shield == 0) {
+			objectSet[moveSet[0]].life -= 1;
+			if (objectSet[moveSet[0]].life <= 0) {
+			    if (lifeLeft == 0) {
+				objectSet[moveSet[0]].destroy = 1;
+			    }
+			    else {
+				lifeLeft--;
+				objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
+				invulnerable = (new Date()).getTime();
+			    }
+			}
+		    }
 
-            for (var j = 0; j < otherSet.length; j++) {
-                if (BoundCheck(objectSet[bulletSet[i]], objectSet[otherSet[j]])) {
-                    if (objectSet[otherSet[0]].shield == 0) {
-                        objectSet[bulletSet[i]].destroy = 1;
-                        objectSet[otherSet[j]].life -= 100;
-                    }
-                    if (invulnerable == -1) {
-                        if (skillChosen[5] == 1 && objectSet[moveSet[0]].shield == 0) {
-                            objectSet[moveSet[0]].life -= 1;
-                            if (objectSet[moveSet[0]].life <= 0) {
-                                if (lifeleft == 0) {
-                                    objectSet[moveSet[0]].destroy = 1;
-                                }
-                                else {
-                                    lifeleft--;
-                                    objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
-                                    invulnerable = (new Date()).getTime();
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        if ((new Date()).getTime() - invulnerable >= 3000) {
-                            invulnerable = -1;
-                        }
-                    }
-
-                    if (objectSet[otherSet[j]].life <= 0) {
-                        objectSet[otherSet[j]].destroy = 1;
-                    }
-                    break;
-                }
-            }
+		    if (objectSet[enemySet[0]].life <= 0) {
+			objectSet[enemySet[0]].destroy = 1;
+			levelUp=(new Date()).getTime();
+		    }
+		}
+	    }
+         
 
             for (var j = 0; j < droneSet.length; j++) {
                 if (BoundCheck(objectSet[bulletSet[i]], objectSet[droneSet[j]])) {
@@ -609,34 +589,26 @@ window.onload = function () {
             }
         }
 
-        for (var i = 0; i < droneSet.length; i++) {
-            for (var j = 0; j < moveSet.length; j++) {
-                if (BoundCheck(objectSet[droneSet[i]], objectSet[moveSet[j]])) {
-                    objectSet[droneSet[i]].destroy = 1;
-                    if (invulnerable == -1) {
-                        if (objectSet[moveSet[j]].shield == 0 && otherSet.length != 0) {
-                            objectSet[moveSet[j]].life -= 5;
-                            if (objectSet[moveSet[j]].life <= 0) {
-                                if (lifeleft == 0) {
-                                    objectSet[moveSet[j]].destroy = 1;
-                                }
-                                else {
-                                    lifeleft--;
-                                    objectSet[moveSet[j]].life = objectSet[moveSet[j]].maxlife;
-                                    invulnerable = (new Date()).getTime();
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        if ((new Date()).getTime() - invulnerable >= 3000) {
-                            invulnerable = -1;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
+	if (objectSet[moveSet[0]].shield == 0 && levelUp == -1) {
+	    for (var i = 0; i < droneSet.length; i++) {
+		if (BoundCheck(objectSet[droneSet[i]], objectSet[moveSet[0]])) {
+		    objectSet[droneSet[i]].destroy = 1;
+		    if (invulnerable == -1) {		   
+			objectSet[moveSet[0]].life -= 5;
+			if (objectSet[moveSet[0]].life <= 0) {
+			    if (lifeLeft == 0) {
+				objectSet[moveSet[0]].destroy = 1;
+			    }
+			    else {
+				lifeLeft--;
+				objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
+				invulnerable = (new Date()).getTime();
+			    }
+			}
+		    }
+		}
+	    }
+	}
     }
 
 
@@ -650,16 +622,16 @@ window.onload = function () {
                         bulletSet[j]--;
                     }
                 }
-                for (var j = 0; j < moveSet.length; j++) {
-                    if (moveSet[j] > bulletSet[i]) {
-                        moveSet[j]--;
-                    }
-                }
-                for (var j = 0; j < otherSet.length; j++) {
-                    if (otherSet[j] > bulletSet[i]) {
-                        otherSet[j]--;
-                    }
-                }
+              
+		if (moveSet[0] > bulletSet[i]) {
+		    moveSet[0]--;
+		}
+            
+            
+		if (enemySet[0] > bulletSet[i]) {
+		    enemySet[0]--;
+		}
+              
                 for (var j = 0; j < droneSet.length; j++) {
                     if (droneSet[j] > bulletSet[i]) {
                         droneSet[j]--;
@@ -671,67 +643,51 @@ window.onload = function () {
                 i++;
             }
         }
-        i = 0;
-        while (i < moveSet.length) {
-            if (objectSet[moveSet[i]].destroy == 1) {
-                objectSet.splice(moveSet[i], 1);
-                for (var j = 0; j < bulletSet.length; j++) {
-                    if (bulletSet[j] > moveSet[i]) {
-                        bulletSet[j]--;
-                    }
-                }
-                for (var j = 0; j < moveSet.length; j++) {
-                    if (moveSet[j] > moveSet[i]) {
-                        moveSet[j]--;
-                    }
-                }
-                for (var j = 0; j < otherSet.length; j++) {
-                    if (otherSet[j] > moveSet[i]) {
-                        otherSet[j]--;
-                    }
-                }
-                for (var j = 0; j < droneSet.length; j++) {
-                    if (droneSet[j] > moveSet[i]) {
-                        droneSet[j]--;
-                    }
-                }
+    
+    
+	if (objectSet[moveSet[0]].destroy == 1) {
+	    objectSet.splice(moveSet[0], 1);
+	    for (var j = 0; j < bulletSet.length; j++) {
+		if (bulletSet[j] > moveSet[0]) {
+		    bulletSet[j]--;
+		}
+	    }
+                             
+	    if (enemySet[0] > moveSet[0]){
+		enemySet[0]--;
+	    }
+               
+	    for (var j = 0; j < droneSet.length; j++) {
+		if (droneSet[j] > moveSet[0]) {
+		    droneSet[j]--;
+		}
+	    }
 
-                moveSet.splice(i, 1);
-            }
-            else {
-                i++;
-            }
-        }
-        i = 0;
-        while (i < otherSet.length) {
-            if (objectSet[otherSet[i]].destroy == 1) {
-                objectSet.splice(otherSet[i], 1);
-                for (var j = 0; j < bulletSet.length; j++) {
-                    if (bulletSet[j] > otherSet[i]) {
-                        bulletSet[j]--;
-                    }
-                }
-                for (var j = 0; j < moveSet.length; j++) {
-                    if (moveSet[j] > otherSet[i]) {
-                        moveSet[j]--;
-                    }
-                }
-                for (var j = 0; j < otherSet.length; j++) {
-                    if (otherSet[j] > otherSet[i]) {
-                        otherSet[j]--;
-                    }
-                }
-                for (var j = 0; j < droneSet.length; j++) {
-                    if (droneSet[j] > otherSet[i]) {
-                        droneSet[j]--;
-                    }
-                }
-                otherSet.splice(i, 1);
-            }
-            else {
-                i++;
-            }
-        }
+	    moveSet.splice(i, 1);
+	}
+        
+       
+     
+	if (objectSet[enemySet[0]].destroy == 1) {
+	    objectSet.splice(enemySet[0], 1);
+	    for (var j = 0; j < bulletSet.length; j++) {
+		if (bulletSet[j] > enemySet[0]) {
+		    bulletSet[j]--;
+		}
+	    }
+               
+	    if (moveSet[0] > enemySet[0]) {
+		moveSet[0]--;
+	    }
+                                    
+	    for (var j = 0; j < droneSet.length; j++) {
+		if (droneSet[j] > enemySet[0]) {
+		    droneSet[j]--;
+		}
+	    }
+	    enemySet.splice(i, 1);
+	}        
+     
 
         i = 0;
         while (i < droneSet.length) {
@@ -742,16 +698,16 @@ window.onload = function () {
                         bulletSet[j]--;
                     }
                 }
-                for (var j = 0; j < moveSet.length; j++) {
-                    if (moveSet[j] > droneSet[i]) {
-                        moveSet[j]--;
-                    }
-                }
-                for (var j = 0; j < otherSet.length; j++) {
-                    if (otherSet[j] > droneSet[i]) {
-                        otherSet[j]--;
-                    }
-                }
+         
+		if (moveSet[0] > droneSet[i]) {
+		    moveSet[0]--;
+		}
+             
+              
+		if (enemySet[0] > droneSet[i]) {
+		    enemySet[0]--;
+		}
+              
                 for (var j = 0; j < droneSet.length; j++) {
                     if (droneSet[j] > droneSet[i]) {
                         droneSet[j]--;
@@ -766,61 +722,57 @@ window.onload = function () {
     }
 
     function drawBackGround() {
-        var xRatio = canvas.width / sourceWidth;
-        var yRatio = canvas.height / sourceHeight;
-        context.drawImage(map, UpperLeftX / xRatio, UpperLeftY / yRatio, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+        var xRatio = canvas.width / map.width * 2;
+        var yRatio = canvas.height / map.height * 2;
+        context.drawImage(map, upperLeftX / xRatio, upperLeftY / yRatio, map.width / 2, map.height / 2, 0, 0, canvas.width, canvas.height);
     }
 
     function react() {
-        if (shootBullet == 1) {
-            launchBullet();
-        }
-
         if (openShield == 1) {
             launchShield();
         }
 
         if (explosion == 1) {
-            Explosion();
+            launchExplosion();
         }
 
         if (Wdown) {
-            for (var i = 0; i < moveSet.length; i++) {
-                objectSet[moveSet[i]].speed += acceleration;
-                if (SlowCenterX != -1 && SlowCenterY != -1 && (objectSet[moveSet[i]].x - SlowCenterX) * (objectSet[moveSet[i]].x - SlowCenterX) + (objectSet[moveSet[i]].y - SlowCenterY) * (objectSet[moveSet[i]].y - SlowCenterY) < 100 * 100) {
-                    if (objectSet[moveSet[i]].speed > 0.2 * speedLimit) {
-                        objectSet[moveSet[i]].speed = 0.2 * speedLimit;
+          
+                objectSet[moveSet[0]].speed += acceleration;
+                if (slowCenterX != -1 && slowCenterY != -1 && (objectSet[moveSet[0]].x - slowCenterX) * (objectSet[moveSet[0]].x - slowCenterX) + (objectSet[moveSet[0]].y - slowCenterY) * (objectSet[moveSet[0]].y - slowCenterY) < 100 * 100) {
+                    if (objectSet[moveSet[0]].speed > 0.2 * speedLimit) {
+                        objectSet[moveSet[0]].speed = 0.2 * speedLimit;
                     }
                 }
                 else {
-                    if (objectSet[moveSet[i]].speed > speedLimit) {
-                        objectSet[moveSet[i]].speed = speedLimit;
+                    if (objectSet[moveSet[0]].speed > speedLimit) {
+                        objectSet[moveSet[0]].speed = speedLimit;
                     }
                 }
 
-                objectSet[moveSet[i]].rotToDxDy();
-            }
+                objectSet[moveSet[0]].rotToDxDy();
+         
         }
         if (Sdown) {
-            for (var i = 0; i < moveSet.length; i++) {
-                objectSet[moveSet[i]].speed -= 2 * acceleration;
-                if (objectSet[moveSet[i]].speed < 0) {
-                    objectSet[moveSet[i]].speed = 0;
+            
+                objectSet[moveSet[0]].speed -= 2 * acceleration;
+                if (objectSet[moveSet[0]].speed < 0) {
+                    objectSet[moveSet[0]].speed = 0;
                 }
-                objectSet[moveSet[i]].rotToDxDy();
-            }
+                objectSet[moveSet[0]].rotToDxDy();
+          
         }
         if (Adown) {
-            for (var i = 0; i < moveSet.length; i++) {
-                objectSet[moveSet[i]].rot += rotationSpeed;
-                objectSet[moveSet[i]].rotToDxDy();
-            }
+            
+                objectSet[moveSet[0]].rot += rotationSpeed;
+                objectSet[moveSet[0]].rotToDxDy();
+          
         }
         if (Ddown) {
-            for (var i = 0; i < moveSet.length; i++) {
-                objectSet[moveSet[i]].rot -= rotationSpeed;
-                objectSet[moveSet[i]].rotToDxDy();
-            }
+          
+                objectSet[moveSet[0]].rot -= rotationSpeed;
+                objectSet[moveSet[0]].rotToDxDy();
+           
         }
     }
 
@@ -832,10 +784,11 @@ window.onload = function () {
         context.fillText('Level       ' + curLevel, canvas.width / 2, 40);
         context.font = '15pt Calibri';
         context.fillStyle = 'yellow';
-        context.fillText('Explosion:' + (exploded ? 'used' : 'not used'), 120, 40);
-        var left = objectSet[moveSet[0]].ShieldTimer == -1 ? 0 : Math.max(Math.ceil((6 + difficulty) - ((new Date()).getTime() - objectSet[moveSet[0]].ShieldTimer) / 1000), 0);
-        context.fillText('Next Shield in :' + left.toString(), 120, 70);
-        context.fillText('life remained:' + lifeleft.toString(), 120, 100);
+	var left = explosionTimer == -1 ? 0 : Math.max(Math.ceil(10 - ((new Date()).getTime() - explosionTimer) / 1000), 0);
+        context.fillText('Explosion Available in ' + left.toString() + ' seconds', 200, 40);
+        left = objectSet[moveSet[0]].shieldTimer == -1 ? 0 : Math.max(Math.ceil(6 - ((new Date()).getTime() - objectSet[moveSet[0]].shieldTimer) / 1000), 0);
+        context.fillText('Shield Available in ' + left.toString()+ ' seconds', 200, 70) ;
+        context.fillText(lifeLeft.toString()+' Lives Remained' , 200, 100);
         context.fillStyle = 'red';
         var displayY = 50;
         if (skillChosen[0] == 1) {
@@ -914,55 +867,71 @@ window.onload = function () {
 
     function ending() {
         start = 4;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.font = '40pt Calibri';
-        context.textAlign = 'center';
-        context.textBasline = 'middle';
-        context.fillStyle = 'black';
-        context.fillText('You\'ve Defeated the Enemies!', canvas.width / 2, canvas.height / 2 - 100);
-        context.fillText('Designer: Zhouyuan Li and Joseph Francke', canvas.width / 2, canvas.height / 2 + 100);
-        context.font = '20pt Calibri';
-        context.fillText('Press Enter to return to the menu', canvas.width / 2, canvas.height / 2 + 200);
+	if (moveSet.length != 0){
+	    context.clearRect(0, 0, canvas.width, canvas.height);
+	    context.font = '40pt Calibri';
+	    context.textAlign = 'center';
+	    context.textBasline = 'middle';
+	    context.fillStyle = 'black';
+	    context.fillText('You\'ve Defeated the Enemies!', canvas.width / 2, canvas.height / 2 - 100);
+	    context.fillText('Designer: Zhouyuan Li and Joseph Francke', canvas.width / 2, canvas.height / 2 + 100);
+	    context.font = '20pt Calibri';
+	    context.fillText('Press Enter to return to the menu', canvas.width / 2, canvas.height / 2 + 200);
+	}
+	else{
+	     context.font = '60pt Calibri';
+	     context.textAlign = 'center';
+	     context.textBasline = 'middle';
+	     context.fillStyle = 'red';
+	     context.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
+	     context.font = '20pt Calibri';
+	     context.fillText('Press Enter to return to the menu', canvas.width / 2, canvas.height / 2 + 100);
+	     
+	}
     }
 
     function effect() {
-        if (levelup != -1) {
+        if (levelUp != -1) {
             return;
         }
 
         var time = (new Date()).getTime();
-        if (objectSet[moveSet[0]].ShieldTimer != -1) {
-            if ((time - objectSet[moveSet[0]].ShieldTimer) >= 2000 && (time - objectSet[moveSet[0]].ShieldTimer) < 6000) {
+        if (objectSet[moveSet[0]].shieldTimer != -1) {
+            if ((time - objectSet[moveSet[0]].shieldTimer) >= 2000 && (time - objectSet[moveSet[0]].shieldTimer) < 6000) {
                 objectSet[moveSet[0]].shield = 0;
             }
             else {
-                if ((time - objectSet[moveSet[0]].ShieldTimer) >= 6000) {
-                    objectSet[moveSet[0]].ShieldTimer = -1;
+                if ((time - objectSet[moveSet[0]].shieldTimer) >= 6000) {
+                    objectSet[moveSet[0]].shieldTimer = -1;
                 }
             }
         }
 
+	if (explosionTimer !=-1 && time - explosionTimer >= 10000) {
+	    explosionTimer = -1;
+	}    
+
         if (skillChosen[0] == 1) {
 
-            if (SlowDownTimer == -1) {
-                SlowDownTimer = time;
+            if (slowDownTimer == -1) {
+                slowDownTimer = time;
             }
             else {
-                if (time - SlowDownTimer >= 6000 && time - SlowDownTimer < 10000) {
-                    if (SlowCenterX == -1 && SlowCenterY == -1) {
-                        SlowCenterX = objectSet[moveSet[0]].x;
-                        SlowCenterY = objectSet[moveSet[0]].y;
+                if (time - slowDownTimer >= 6000 && time - slowDownTimer < 10000) {
+                    if (slowCenterX == -1 && slowCenterY == -1) {
+                        slowCenterX = objectSet[moveSet[0]].x;
+                        slowCenterY = objectSet[moveSet[0]].y;
                     }
                     context.beginPath();
                     context.fillStyle = 'green';
-                    context.arc(SlowCenterX - UpperLeftX, SlowCenterY - UpperLeftY, 100, 0, 2 * Math.PI, false);
+                    context.arc(slowCenterX - upperLeftX, slowCenterY - upperLeftY, 100, 0, 2 * Math.PI, false);
                     context.fill();
                 }
                 else {
-                    if (time - SlowDownTimer >= 10000) {
-                        SlowDownTimer = time;
-                        SlowCenterX = -1;
-                        SlowCenterY = -1;
+                    if (time - slowDownTimer >= 10000) {
+                        slowDownTimer = time;
+                        slowCenterX = -1;
+                        slowCenterY = -1;
                     }
                 }
             }
@@ -975,14 +944,14 @@ window.onload = function () {
             else {
                 if (time - VortexTimer >= 7500 && time - VortexTimer < 8000) {
                     if (VortexDragX == -1 && VortexDragY == -1) {
-                        VortexDragX = 0.03 * (objectSet[otherSet[0]].x - objectSet[moveSet[0]].x);
-                        VortexDragY = 0.03 * (objectSet[otherSet[0]].y - objectSet[moveSet[0]].y);
+                        VortexDragX = 0.03 * (objectSet[enemySet[0]].x - objectSet[moveSet[0]].x);
+                        VortexDragY = 0.03 * (objectSet[enemySet[0]].y - objectSet[moveSet[0]].y);
                     }
                     objectSet[moveSet[0]].x += VortexDragX;
                     objectSet[moveSet[0]].y += VortexDragY;
-                    if (SlowCenterX != -1 && SlowCenterY != -1) {
-                        SlowCenterX += VortexDragX;
-                        SlowCenterY += VortexDragY;
+                    if (slowCenterX != -1 && slowCenterY != -1) {
+                        slowCenterX += VortexDragX;
+                        slowCenterY += VortexDragY;
                     }
                 }
                 else {
@@ -996,22 +965,22 @@ window.onload = function () {
         }
 
         if (skillChosen[2] == 1) {
-            objectSet[otherSet[0]].life += 0.002 * (objectSet[otherSet[0]].maxlife - objectSet[otherSet[0]].life);
+            objectSet[enemySet[0]].life += 0.002 * (objectSet[enemySet[0]].maxlife - objectSet[enemySet[0]].life);
         }
 
         if (skillChosen[3] == 1) {
 
-            if (objectSet[otherSet[0]].ShieldTimer == -1) {
-                objectSet[otherSet[0]].ShieldTimer = time;
+            if (objectSet[enemySet[0]].shieldTimer == -1) {
+                objectSet[enemySet[0]].shieldTimer = time;
             }
             else {
-                if (time - objectSet[otherSet[0]].ShieldTimer >= 5000 && time - objectSet[otherSet[0]].ShieldTimer < 6000) {
-                    objectSet[otherSet[0]].shield = 1;
+                if (time - objectSet[enemySet[0]].shieldTimer >= 5000 && time - objectSet[enemySet[0]].shieldTimer < 6000) {
+                    objectSet[enemySet[0]].shield = 1;
                 }
                 else {
-                    if (time - objectSet[otherSet[0]].ShieldTimer >= 6000) {
-                        objectSet[otherSet[0]].ShieldTimer = time;
-                        objectSet[otherSet[0]].shield = 0;
+                    if (time - objectSet[enemySet[0]].shieldTimer >= 6000) {
+                        objectSet[enemySet[0]].shieldTimer = time;
+                        objectSet[enemySet[0]].shield = 0;
                     }
                 }
             }
@@ -1025,13 +994,13 @@ window.onload = function () {
             else {
                 if (time - MeteorTimer >= 2000 && time - MeteorTimer < 4000) {
                     while (MeteorX.length < 20 && MeteorY.length < 20) {
-                        MeteorX.push(Math.random() * canvas.width + UpperLeftX);
-                        MeteorY.push(Math.random() * canvas.height + UpperLeftY);
+                        MeteorX.push(Math.random() * canvas.width + upperLeftX);
+                        MeteorY.push(Math.random() * canvas.height + upperLeftY);
                     }
                     context.fillStyle = 'yellow';
                     for (var i = 0; i < MeteorX.length; i++) {
                         context.beginPath();
-                        context.arc(MeteorX[i] - UpperLeftX, MeteorY[i] - UpperLeftY, 30, 0, 2 * Math.PI, false);
+                        context.arc(MeteorX[i] - upperLeftX, MeteorY[i] - upperLeftY, 30, 0, 2 * Math.PI, false);
                         context.fill();
                     }
                 }
@@ -1044,22 +1013,12 @@ window.onload = function () {
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-        launchDrone();
+	
+	launchDrone();
     }
 
-
-
     function drawLoop() {
-        if (mapload == 1 && planeload == 1 && castleload == 1 && blackcastleload == 1 && bulletload == 1 && shieldplaneload == 1 && blackplaneload == 1) {
+        if (mapLoad == 1 && planeLoad == 1 && enemyLoad == 1 && shieldEnemyLoad == 1 && bulletLoad == 1 && shieldplaneLoad == 1 && blackplaneLoad == 1 && start == 3) {
             drawBackGround();
             drawInformation();
             effect();
@@ -1069,10 +1028,9 @@ window.onload = function () {
             hitTest();
             destroy();
             draws();
-            if (otherSet.length == 0) {
+            if (levelUp != -1) {
                 if (curLevel == maxLevel) {
                     ending();
-                    return;
                 }
                 else {
                     context.font = '60pt Calibri';
@@ -1080,26 +1038,15 @@ window.onload = function () {
                     context.textBasline = 'middle';
                     context.fillStyle = 'blue';
                     context.fillText('Level   ' + curLevel + '       Complete', canvas.width / 2, canvas.height / 2);
-                    if (levelup == -1) {
-                        levelup = (new Date()).getTime();
-                    }
-                    else {
-                        if ((new Date()).getTime() - levelup >= 3000) {
-                            curLevel++;
-                            init();
-                        }
-                    }
+		    if ((new Date()).getTime() - levelUp >= 3000) {
+			curLevel++;
+			init();
+		    }
                 }
             }
             else {
                 if (moveSet.length == 0) {
-                    alert(lifeleft);
-                    context.font = '60pt Calibri';
-                    context.textAlign = 'center';
-                    context.textBasline = 'middle';
-                    context.fillStyle = 'red';
-                    context.fillText('You Lose!', canvas.width / 2, canvas.height / 2);
-                    return;
+		    ending();		    
                 }
             }
         }
@@ -1111,9 +1058,6 @@ window.onload = function () {
             evt.preventDefault();
         }
         switch (evt.keyCode) {
-            case 190:
-                shootDrone = 1;
-                break;
             case 87:
                 Wdown = 1;
                 break;
@@ -1172,6 +1116,7 @@ window.onload = function () {
                         case 2:
                             start = 3;
                             curLevel = 1;
+			    lifeLeft = 3 - difficulty;
                             init();
                             drawLoop();
                             break;
@@ -1254,8 +1199,8 @@ window.onload = function () {
 
     function doClick(evt) {
         if (start == 3) {
-            shootX = evt.pageX - canvas.offsetLeft + UpperLeftX;
-            shootY = evt.pageY - canvas.offsetTop + UpperLeftY;
+            shootX = evt.pageX - canvas.offsetLeft + upperLeftX;
+            shootY = evt.pageY - canvas.offsetTop + upperLeftY;
             launchBullet();
         }
     }
@@ -1263,9 +1208,6 @@ window.onload = function () {
 
     function KeyUp(evt) {
         switch (evt.keyCode) {
-            case 190:
-                shootDrone = 0;
-                break;
             case 87:
                 Wdown = 0;
                 break;
