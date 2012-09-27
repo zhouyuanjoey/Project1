@@ -420,7 +420,7 @@ window.onload = function () {
             objectSet[otherSet[i]].lastshoot = time;
 
             droneSet.push(objectSet.length);
-            objectSet.push(makeDrone(objectSet[otherSet[i]], 1));
+            objectSet.push(makeDrone(objectSet[otherSet[i]], Math.random()*Math.PI*2));
         }
     }
 
