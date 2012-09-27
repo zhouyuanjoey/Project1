@@ -232,7 +232,7 @@ window.onload = function () {
     var start = 0;
     var difficulty = 0;
     var state = 2;
-    var maxLevel = 3;
+    var maxLevel = 6;
     var exploded;
     var lifeleft;
     var SlowDownTimer;
@@ -243,8 +243,8 @@ window.onload = function () {
     var VortexDragY;
     var MeteorTimer;
     var MeteorX;
-    var MeteorY;
-    var StrongHealth = 1;
+    var MeteorY; 
+    var skillChosen;
     var ReflectDamage = 1;
 
     var map = new Image();
@@ -320,6 +320,17 @@ window.onload = function () {
 	MeteorY = [];
 	exploded = 0;
 	lifeleft = 3 - difficulty;
+        skillChosen=[];
+        var skillLeft=[];
+        for (var i=0;i<6;i++){
+            skillChosen.push(0);
+            skillLeft.push(i);
+        }
+        for (var i=0;i<curLevel;i++){
+	    var skillPosition=Math.floor(Math.random()*skillLeft.length);
+ 	    skillChosen[skillLeft[skillPosition]]=1;
+	    skillLeft.splice(skillPosition,1);
+        }
         var destWidth = 100;
         var destHeight = 100;
         var destX = 1.8 * canvas.width;
@@ -419,13 +430,9 @@ window.onload = function () {
     }
 
     function launchShield() {
-        for (var i = 0; i < moveSet.length; i++) {
-            var time = (new Date()).getTime();
-	    if (objectSet[moveSet[i]].ShieldTimer !=-1 && time - objectSet[moveSet[i]].ShieldTimer < (6 + difficulty)*1000) {
-		continue;
-	    }
-            objectSet[moveSet[i]].ShieldTimer = time;
-            objectSet[moveSet[i]].shield = 1;
+        if (objectSet[moveSet[0]].ShieldTimer ==-1){ 	   
+            objectSet[moveSet[0]].ShieldTimer = (new Date()).getTime();
+            objectSet[moveSet[0]].shield = 1;
         }
     }
 
@@ -559,7 +566,7 @@ window.onload = function () {
 			objectSet[otherSet[j]].life -= 100;
 		    }
 		    if (invulnerable == -1){
-			if (ReflectDamage != -1 && objectSet[moveSet[0]].shield == 0){	
+			if (skillChosen[5] == 1 && objectSet[moveSet[0]].shield == 0){	
 			    objectSet[moveSet[0]].life -= 1;
 			    if (objectSet[moveSet[0]].life <= 0) {
 				if (lifeleft == 0){
@@ -822,6 +829,32 @@ window.onload = function () {
 	var left=objectSet[moveSet[0]].ShieldTimer==-1?0:Math.max(Math.ceil((6+difficulty)-((new Date()).getTime()-objectSet[moveSet[0]].ShieldTimer)/1000),0);
 	context.fillText('Next Shield in :' +  left.toString(), 120, 70);
 	context.fillText('life remained:' + lifeleft.toString(), 120, 100);
+	context.fillStyle = 'red';
+	var displayY = 50;
+	if (skillChosen[0] == 1) {
+		context.fillText('Slow Down', 1100, displayY);
+		displayY+=50;
+	}
+	if (skillChosen[1] == 1) {
+		context.fillText('Vortex', 1100, displayY);
+		displayY+=50;
+	}
+	if (skillChosen[2] == 1) {
+		context.fillText('Strong Health', 1100, displayY);
+		displayY+=50;
+	}
+	if (skillChosen[3] == 1) {
+		context.fillText('Shield', 1100, displayY);
+		displayY+=50;
+	}
+	if (skillChosen[4] == 1) {
+		context.fillText('Meteor', 1100, displayY);
+		displayY+=50;
+	}	
+	if (skillChosen[5] == 1) {
+		context.fillText('Reflect Damage', 1100, displayY);
+		displayY+=50;
+	}
 	
 	
     }
@@ -889,14 +922,21 @@ window.onload = function () {
 	if (levelup != -1){
 	    return;
 	}
-        for (var i = 0; i < moveSet.length; i++) {
-            var time = (new Date()).getTime();
-            if ((objectSet[moveSet[i]].ShieldTimer !=-1 && time - objectSet[moveSet[i]].ShieldTimer) >= 2000) {
-                objectSet[moveSet[i]].shield = 0;
+        
+        var time = (new Date()).getTime();
+        if (objectSet[moveSet[0]].ShieldTimer !=-1){
+            if ((time - objectSet[moveSet[0]].ShieldTimer) >= 2000 && (time - objectSet[moveSet[0]].ShieldTimer) < 6000) {
+                objectSet[moveSet[0]].shield = 0;
             }
+            else{
+		if ((time - objectSet[moveSet[0]].ShieldTimer) >= 6000) {
+			objectSet[moveSet[0]].ShieldTimer = -1;
+ 		}
+            }	            
         }
 
-	var time = (new Date()).getTime();
+	if (skillChosen[0] == 1){
+
 	if (SlowDownTimer == -1){
 	    SlowDownTimer = time;
 	}
@@ -919,15 +959,17 @@ window.onload = function () {
 		}
 	    }
 	}
+        }
 
+	if (skillChosen[1]==1){
 	if (VortexTimer == 1){
 	    VortexTimer = time;
 	}
 	else{
 	    if (time - VortexTimer >= 7500 && time - VortexTimer < 8000){
 		if (VortexDragX == -1 && VortexDragY == -1){
-		    VortexDragX = 0.035 * (objectSet[otherSet[0]].x - objectSet[moveSet[0]].x);
-		    VortexDragY = 0.035 * (objectSet[otherSet[0]].y - objectSet[moveSet[0]].y);
+		    VortexDragX = 0.03 * (objectSet[otherSet[0]].x - objectSet[moveSet[0]].x);
+		    VortexDragY = 0.03 * (objectSet[otherSet[0]].y - objectSet[moveSet[0]].y);
 		}
 		objectSet[moveSet[0]].x += VortexDragX;
 		objectSet[moveSet[0]].y += VortexDragY;
@@ -944,10 +986,13 @@ window.onload = function () {
 		}
 	    }
 	}
+	}
 
-	if (StrongHealth == 1){
+	if (skillChosen[2]==1){
 	    objectSet[otherSet[0]].life += 0.002 * (objectSet[otherSet[0]].maxlife - objectSet[otherSet[0]].life);
 	}
+
+	if (skillChosen[3]==1){
 
 	if (objectSet[otherSet[0]].ShieldTimer == -1){
 	    objectSet[otherSet[0]].ShieldTimer = time;
@@ -963,12 +1008,15 @@ window.onload = function () {
 		}
 	    }
 	}
+	}
+
+ 	if (skillChosen[4]==1){
 
 	if (MeteorTimer == -1){
 	    MeteorTimer = time;
 	}
 	else{
-	    if (time - MeteorTimer >= 2000 && time - SlowDownTimer < 4000){
+	    if (time - MeteorTimer >= 2000 && time - MeteorTimer < 4000){
 		while (MeteorX.length <20 && MeteorY.length <20){
 		    MeteorX.push(Math.random()*canvas.width + UpperLeftX);
 		    MeteorY.push(Math.random()*canvas.height + UpperLeftY);
@@ -987,6 +1035,7 @@ window.onload = function () {
 		    MeteorY = [];
 		}
 	    }
+	}
 	}
 	    
 		    
