@@ -817,15 +817,15 @@ window.onload = function () {
         context.font = '15pt Century';
         context.fillStyle = 'yellow';
         var left = explosionTimer == -1 ? 0 : Math.max(Math.ceil(10 + 2 * difficulty - ((new Date()).getTime() - explosionTimer) / 1000), 0);
-        context.fillText('Explosion Available in ' + left.toString() + ' seconds', 200, 40);
+        context.fillText('AutoHack Available in ' + left.toString() + ' seconds', 200, 40);
         left = objectSet[moveSet[0]].shieldTimer == -1 ? 0 : Math.max(Math.ceil(6 + difficulty - ((new Date()).getTime() - objectSet[moveSet[0]].shieldTimer) / 1000), 0);
-        context.fillText('Shield Available in ' + left.toString() + ' seconds', 200, 70);
+        context.fillText('Shields Available in ' + left.toString() + ' seconds', 200, 70);
         context.fillText(lifeLeft.toString() + ' Lives Remained', 200, 100);
         context.fillStyle = 'red';
         var displayY = 40;
 
         if (skillChosen[0] == 1) {
-            context.fillText('Slow Down', 1100, displayY);
+            context.fillText('EMP field', 1100, displayY);
             displayY += 30;
         }
         if (skillChosen[1] == 1) {
@@ -833,19 +833,19 @@ window.onload = function () {
             displayY += 30;
         }
         if (skillChosen[2] == 1) {
-            context.fillText('Strong Health', 1100, displayY);
+            context.fillText('Strong Hull', 1100, displayY);
             displayY += 30;
         }
         if (skillChosen[3] == 1) {
-            context.fillText('Shield', 1100, displayY);
+            context.fillText('Shields', 1100, displayY);
             displayY += 30;
         }
         if (skillChosen[4] == 1) {
-            context.fillText('Meteor', 1100, displayY);
+            context.fillText('Blink Torpedos', 1100, displayY);
             displayY += 30;
         }
         if (skillChosen[5] == 1) {
-            context.fillText('Reflect Damage', 1100, displayY);
+            context.fillText('Reflective Plating', 1100, displayY);
             displayY += 30;
         }
 
@@ -1253,7 +1253,7 @@ window.onload = function () {
         context.font = '20pt Arial';
         context.fillText('WASD keys control movement', canvas.width / 2, 3 * canvas.height / 8);
         context.fillText('Left mouseclick to fire weapons', canvas.width / 2, canvas.height / 2);
-        context.fillText('Spacebar to deploy your shields which will recharge overtime', canvas.width / 2, 5 * canvas.height / 8);
+        context.fillText('Spacebar to deploy your shields, which will recharge over time', canvas.width / 2, 5 * canvas.height / 8);
         context.fillText('Q hacks enemy droids and causes them to self-destruct', canvas.width / 2, 3 * canvas.height / 4);
         context.font = '12pt Arial';
         context.fillText('*Warning* Enemy will likely develop increased security protocols', canvas.width / 2, 3 * canvas.height / 4 + 30);
