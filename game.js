@@ -582,30 +582,33 @@ window.onload = function () {
                 objectSet[bulletSet[i]].destroy = 1;
             }
 
-            if (levelUp == -1 && objectSet[enemySet[0]].shield == 0) {
-                if (BoundCheck(objectSet[bulletSet[i]], objectSet[enemySet[0]])) {
-                    objectSet[bulletSet[i]].destroy = 1;
-                    objectSet[enemySet[0]].life -= 100;
-                    if (invulnerable == -1 && skillChosen[5] == 1 && objectSet[moveSet[0]].shield == 0) {
-                        objectSet[moveSet[0]].life -= 1;
-                        if (objectSet[moveSet[0]].life <= 0) {
-                            if (lifeLeft == 0) {
-                                objectSet[moveSet[0]].destroy = 1;
-                            }
-                            else {
-                                lifeLeft--;
-                                objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
-                                invulnerable = (new Date()).getTime();
-                            }
-                        }
-                    }
+	    if ( levelUp == -1 ){
+		if (BoundCheck(objectSet[bulletSet[i]], objectSet[enemySet[0]])) {
+		    objectSet[bulletSet[i]].destroy = 1;
+		    if (objectSet[enemySet[0]].shield == 0) {
+			objectSet[enemySet[0]].life -= 100;
+			if (invulnerable == -1 && skillChosen[5] == 1 && objectSet[moveSet[0]].shield == 0) {
+			    objectSet[moveSet[0]].life -= 1;
+			    if (objectSet[moveSet[0]].life <= 0) {
+				if (lifeLeft == 0) {
+				    objectSet[moveSet[0]].destroy = 1;
+				}
+				else {
+				    lifeLeft--;
+				    objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
+				    invulnerable = (new Date()).getTime();
+				}
+			    }
+			}
 
-                    if (objectSet[enemySet[0]].life <= 0) {
-                        objectSet[enemySet[0]].destroy = 1;
-                        levelUp = (new Date()).getTime();
-                    }
-                }
-            }
+			if (objectSet[enemySet[0]].life <= 0) {
+			    objectSet[enemySet[0]].destroy = 1;
+			    levelUp = (new Date()).getTime();
+			}
+		    }
+		}
+	    }
+       
 
 
             for (var j = 0; j < droneSet.length; j++) {
@@ -617,26 +620,25 @@ window.onload = function () {
             }
         }
 
-        if (objectSet[moveSet[0]].shield == 0) {
-            for (var i = 0; i < droneSet.length; i++) {
-                if (BoundCheck(objectSet[droneSet[i]], objectSet[moveSet[0]])) {
-                    objectSet[droneSet[i]].destroy = 1;
-                    if (invulnerable == -1 && levelUp == -1) {
-                        objectSet[moveSet[0]].life -= 5;
-                        if (objectSet[moveSet[0]].life <= 0) {
-                            if (lifeLeft == 0) {
-                                objectSet[moveSet[0]].destroy = 1;
-                            }
-                            else {
-                                lifeLeft--;
-                                objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
-                                invulnerable = (new Date()).getTime();
-                            }
-                        }
-                    }
-                }
-            }
-        }
+      
+	for (var i = 0; i < droneSet.length; i++) {
+	    if (BoundCheck(objectSet[droneSet[i]], objectSet[moveSet[0]])) {
+		objectSet[droneSet[i]].destroy = 1;
+		if (invulnerable == -1 && levelUp == -1 && objectSet[moveSet[0]].shield == 0) {
+		    objectSet[moveSet[0]].life -= 5;
+		    if (objectSet[moveSet[0]].life <= 0) {
+			if (lifeLeft == 0) {
+			    objectSet[moveSet[0]].destroy = 1;
+			}
+			else {
+			    lifeLeft--;
+			    objectSet[moveSet[0]].life = objectSet[moveSet[0]].maxlife;
+			    invulnerable = (new Date()).getTime();
+			}
+		    }
+		}
+	    }
+	}      
     }
 
 
@@ -939,20 +941,21 @@ window.onload = function () {
             context.fillText('You\'ve Defeated the Enemies!', canvas.width / 2, canvas.height / 2 - 150);
             context.font = '40pt Times New Roman';
 
-            context.fillText('Designers', canvas.width / 3, canvas.height / 2 - 66);
+            context.fillText('Designers', canvas.width / 3 -20, canvas.height / 2 - 66);
 
-            context.fillText('Original Pixel Art', canvas.width / 3, canvas.height / 2 + 66);
-            context.fillText('Flocking Algorithm', canvas.width / 3, canvas.height / 2 + 133);
+            context.fillText('Original Pixel Art', canvas.width / 3 - 20, canvas.height / 2 + 66);
+            context.fillText('Flocking Algorithm', canvas.width / 3 - 20, canvas.height / 2 + 133);
 
             context.fillText(':', canvas.width / 2, canvas.height / 2 - 66);
             context.fillText(':', canvas.width / 2, canvas.height / 2);
             context.fillText(':', canvas.width / 2, canvas.height / 2 + 66);
             context.fillText(':', canvas.width / 2, canvas.height / 2 + 133);
-
-            context.fillText('Zhouyuan Li   ', 2 * canvas.width / 3, canvas.height / 2 - 66);
-            context.fillText('Joseph Francke', 2 * canvas.width / 3, canvas.height / 2);
-            context.fillText('Lexy Wenzel   ', 2 * canvas.width / 3, canvas.height / 2 + 66);
-            context.fillText('Mike Gleicher ', 2 * canvas.width / 3, canvas.height / 2 + 133);
+	    
+	    context.textAlign = 'left';
+            context.fillText('Zhouyuan Li   ', 2 * canvas.width / 3 - 130, canvas.height / 2 - 66);
+            context.fillText('Joseph Francke', 2 * canvas.width / 3 - 130, canvas.height / 2);
+            context.fillText('Lexy Wenzel   ', 2 * canvas.width / 3 - 130, canvas.height / 2 + 66);
+            context.fillText('Michael Gleicher ', 2 * canvas.width / 3 - 130, canvas.height / 2 + 133);
             context.font = '20pt Times New Roman';
             context.fillText('Press Enter to return to the menu', canvas.width / 2, canvas.height / 2 + 200);
         }
