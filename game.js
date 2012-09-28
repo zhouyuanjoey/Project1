@@ -6,7 +6,7 @@ window.onload = function () {
 	          window.msRequestAnimationFrame ||
 	  function (/* function FrameRequestCallback */callback, /* DOMElement Element */element) {
 	      window.setTimeout(callback, 20);
-	  };
+    };
 
     var reqStart =
 	  function (/* function FrameRequestCallback */callback, /* DOMElement Element */element) {
@@ -188,7 +188,7 @@ window.onload = function () {
         obj.y = launcher.y;
         obj.width = 45;
         obj.height = 15;
-        obj.speed = 3;
+        obj.speed = 3+difficulty;
         obj.rotToDxDy();
         obj.destroy = 0;
         return obj;
@@ -362,7 +362,7 @@ window.onload = function () {
         var set = [];
         set.push(enemy);
         set.push(shieldEnemy);
-        objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 1, 2000));
+        objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 1, (2+difficulty)*1000));
         enemySet.push(0);
         destWidth = 111;
         destHeight = 70;
@@ -372,7 +372,7 @@ window.onload = function () {
         set.push(plane);
         set.push(shieldplane);
         set.push(blackplane);
-        objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 0, 100));
+        objectSet.push(makeObject(set, 0, destX, destY, destWidth, destHeight, 0, (10-difficulty)*10));
         moveSet.push(1);
     }
 
@@ -1105,20 +1105,20 @@ window.onload = function () {
             destroy();
             draws();
             if (levelUp != -1) {
-                if (curLevel == maxLevel) {
-                    ending();
-                }
-                else {
-                    context.font = '60pt Times New Roman';
-                    context.textAlign = 'center';
-                    context.textBasline = 'middle';
-                    context.fillStyle = 'blue';
-                    context.fillText('Level   ' + curLevel + '       Complete', canvas.width / 2, canvas.height / 2);
-                    if ((new Date()).getTime() - levelUp >= 3000) {
-                        curLevel++;
-                        init();
-                    }
-                }
+		context.font = '60pt Times New Roman';
+		context.textAlign = 'center';
+		context.textBasline = 'middle';
+		context.fillStyle = 'blue';
+		context.fillText('Level   ' + curLevel + '       Complete', canvas.width / 2, canvas.height / 2);
+		if ((new Date()).getTime() - levelUp >= 3000) {
+		    if (curLevel==maxLevel){
+			ending();
+		    }
+		    else{
+			curLevel++;
+			init();
+		    }
+		}
             }
             else {
                 if (moveSet.length == 0) {
@@ -1379,6 +1379,7 @@ window.onload = function () {
     }
 
     function doClick(evt) {
+	evt.preventDefault();
         switch (start) {
             case 0:
                 if (state == 0) {
@@ -1413,6 +1414,7 @@ window.onload = function () {
 
 
     function KeyUp(evt) {
+	evt.preventDefault();
         switch (evt.keyCode) {
             case 87:
                 Wdown = 0;
